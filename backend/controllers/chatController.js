@@ -1,4 +1,4 @@
-
+import Chatbot from '../models/Chatbot.js';
 import Document from '../models/Document.js';
 import User from '../models/User.js';
 import { GoogleGenAI } from '@google/genai';
@@ -38,8 +38,11 @@ export const handleChat = async (req, res) => {
       return res.status(400).json({ error: "API Key is required to use this bot." });
     }
 
-    // Note: We no longer verify 'botId' against a Chatbot table because it was deleted.
-    // We simply check if there are documents for this ID.
+    // 0. Fetch Bot Metadata (System Instruction)
+    const bot = await Chatbot.findById(botId);
+    if (!bot) {
+      return res.status(404).json({ error: "Bot not found" });
+    }
 
     // 1. RAG: Fetch Context
     const docs = await Document.find({ chatbot_id: botId });
@@ -48,7 +51,7 @@ export const handleChat = async (req, res) => {
     // 2. Generate AI Response
     const ai = new GoogleGenAI({ apiKey: apiKey });
 
-    const systemPrompt = "You are a helpful assistant. Use the provided context to answer questions.";
+    const systemPrompt = bot.systemInstruction || "You are a helpful assistant. Use the provided context to answer questions.";
     const fullPrompt = `
     ${systemPrompt}
 

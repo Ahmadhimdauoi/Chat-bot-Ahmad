@@ -1,3 +1,10 @@
+import mongoose from 'mongoose';
 
-// This model is deprecated as per user request to delete the Bots table.
-export default {};
+const chatbotSchema = new mongoose.Schema({
+  name: { type: String, required: true },
+  welcomeMessage: { type: String, default: "Hello! How can I help you?" },
+  systemInstruction: { type: String, default: "You are a helpful assistant." },
+  created_at: { type: Date, default: Date.now }
+});
+
+export default mongoose.model('Chatbot', chatbotSchema);
