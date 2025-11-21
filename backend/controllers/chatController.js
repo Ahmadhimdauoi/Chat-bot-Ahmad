@@ -72,6 +72,20 @@ export const handleChat = async (req, res) => {
     - If the answer is not in the text, strictly say "The answer is not available in the provided documents."
     - Use Markdown for formatting.
 
+    STRICT FORMATTING RULES:
+    1. **Tables**: You MUST use Markdown tables for ALL structured data, especially:
+       - Accounting Journal Entries (القيود اليومية).
+       - General Ledgers (دفتر الأستاذ).
+       - Trial Balances (ميزان المراجعة).
+       - Financial Statements (Lists of assets, liabilities, equity).
+       - Comparisons between items.
+    
+    2. **Journal Entries Format**: When asked for journal entries, format them clearly in a table with columns like: [Date | Description/Account | Debit | Credit].
+    
+    3. **T-Accounts**: Represents T-accounts using tables with two main columns (Debit side / Credit side).
+
+    4. **Clarity**: Ensure the response is visually clean and easy to read.
+
     User Question: 
     ${message}
     

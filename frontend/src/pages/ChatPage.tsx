@@ -82,8 +82,8 @@ const ChatMessageBubble: React.FC<{ message: ChatMessage }> = ({ message }) => {
                 thead: ({node, ...props}) => <thead className="bg-gray-50 dark:bg-gray-800" {...props} />,
                 tbody: ({node, ...props}) => <tbody className="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-800" {...props} />,
                 tr: ({node, ...props}) => <tr className="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors" {...props} />,
-                th: ({node, ...props}) => <th className="px-4 py-3 text-right text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider" {...props} />,
-                td: ({node, ...props}) => <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300" {...props} />,
+                th: ({node, ...props}) => <th className="px-4 py-3 text-right text-xs font-bold text-gray-900 dark:text-white uppercase tracking-wider bg-gray-100 dark:bg-gray-700/50" {...props} />,
+                td: ({node, ...props}) => <td className="px-4 py-3 text-sm text-gray-700 dark:text-gray-300 align-top leading-relaxed" {...props} />,
                 strong: ({node, ...props}) => <strong className="font-bold text-gray-900 dark:text-white" {...props} />,
                 hr: ({node, ...props}) => <hr className="my-6 border-gray-200 dark:border-gray-700" {...props} />,
               }}
