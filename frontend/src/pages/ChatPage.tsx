@@ -31,7 +31,7 @@ const ChatMessageBubble: React.FC<{ message: ChatMessage }> = ({ message }) => {
       <div
         className={`max-w-[90%] md:max-w-2xl px-5 py-4 rounded-2xl text-sm md:text-base shadow-lg backdrop-blur-sm font-cairo ${
           isAssistant
-            ? 'bg-white/95 dark:bg-gray-800/95 text-gray-800 dark:text-gray-100 rounded-br-none border-r-4 border-primary glass-card dark:border-gray-700'
+            ? 'bg-white/95 dark:bg-gray-800/95 text-gray-800 dark:text-gray-100 rounded-br-none border-r-4 border-primary shadow-sm border border-gray-100 dark:border-gray-700'
             : 'bg-gradient-to-br from-primary to-orange-600 text-white rounded-bl-none'
         }`}
       >
@@ -247,11 +247,11 @@ const ChatPage: React.FC = () => {
       return (
         <div className="min-h-screen flex items-center justify-center p-4 font-cairo bg-background dark:bg-gray-900" dir="rtl">
              {/* Theme Toggle Absolute */}
-             <button onClick={toggleTheme} className="absolute top-4 left-4 p-2 rounded-full bg-white dark:bg-gray-800 shadow-md text-gray-600 dark:text-yellow-400 transition-colors">
+             <button onClick={toggleTheme} className="absolute top-4 left-4 p-2 rounded-full bg-white dark:bg-gray-800 shadow-md text-gray-600 dark:text-yellow-400 transition-colors z-50">
                 {isDarkMode ? <SunIcon className="w-6 h-6"/> : <MoonIcon className="w-6 h-6"/>}
              </button>
 
-            <div className="glass-card dark:bg-gray-800/90 p-8 sm:p-12 rounded-3xl w-full max-w-md transform transition-all hover:scale-[1.01] border dark:border-gray-700">
+            <div className="bg-white/80 dark:bg-gray-800/95 backdrop-blur-md p-8 sm:p-12 rounded-3xl w-full max-w-md transform transition-all hover:scale-[1.01] border border-primary/10 dark:border-gray-700 shadow-2xl">
                 <div className="text-center mb-8">
                     <div className="w-16 h-16 bg-gradient-to-br from-primary to-orange-600 rounded-full mx-auto mb-4 flex items-center justify-center shadow-lg">
                         <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -271,7 +271,7 @@ const ChatPage: React.FC = () => {
                             placeholder="أدخل اسمك..." 
                             value={username}
                             onChange={(e) => setUsername(e.target.value)}
-                            className="w-full p-4 rounded-xl border-2 border-gray-200 dark:border-gray-600 focus:border-primary focus:outline-none transition-colors text-right bg-white/80 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400"
+                            className="w-full p-4 rounded-xl border-2 border-gray-200 dark:border-gray-600 focus:border-primary focus:outline-none transition-colors text-right bg-white dark:bg-gray-700 dark:text-white dark:placeholder-gray-400"
                             required
                         />
                     </div>
@@ -284,7 +284,7 @@ const ChatPage: React.FC = () => {
                             placeholder="أدخل المفتاح هنا..." 
                             value={tempKey}
                             onChange={(e) => setTempKey(e.target.value)}
-                            className="w-full p-4 rounded-xl border-2 border-gray-200 dark:border-gray-600 focus:border-primary focus:outline-none transition-colors text-left bg-white/80 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400"
+                            className="w-full p-4 rounded-xl border-2 border-gray-200 dark:border-gray-600 focus:border-primary focus:outline-none transition-colors text-left bg-white dark:bg-gray-700 dark:text-white dark:placeholder-gray-400"
                             dir="ltr"
                             required
                         />
@@ -319,7 +319,7 @@ const ChatPage: React.FC = () => {
 
   // 4. Main Chat Interface
   return (
-    <div className="flex flex-col h-[calc(100vh-2rem)] md:h-[calc(100vh-4rem)] max-w-5xl mx-auto glass-card rounded-3xl overflow-hidden font-cairo mt-4 md:mt-8 transition-colors duration-300">
+    <div className="flex flex-col h-[calc(100vh-2rem)] md:h-[calc(100vh-4rem)] max-w-5xl mx-auto bg-white/60 dark:bg-gray-900/80 backdrop-blur-xl border border-white/20 dark:border-gray-700 shadow-2xl rounded-3xl overflow-hidden font-cairo mt-4 md:mt-8 transition-colors duration-300">
       {/* Chat Header */}
       <div className="p-5 border-b border-gray-200/50 dark:border-gray-700/50 bg-white/40 dark:bg-gray-900/60 flex items-center justify-between backdrop-blur-sm z-10" dir="rtl">
         <div className="flex items-center gap-3">
