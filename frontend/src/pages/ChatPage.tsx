@@ -29,11 +29,11 @@ const ChatMessageBubble: React.FC<{ message: ChatMessage }> = ({ message }) => {
         className={`max-w-[90%] md:max-w-2xl px-5 py-4 rounded-2xl text-sm md:text-base shadow-lg backdrop-blur-sm font-cairo ${
           isAssistant
             ? 'bg-white/95 text-gray-800 rounded-br-none border-r-4 border-primary glass-card'
-            : 'bg-gradient-to-br from-primary to-yellow-600 text-white rounded-bl-none'
+            : 'bg-gradient-to-br from-primary to-orange-600 text-white rounded-bl-none'
         }`}
       >
         {isAssistant ? (
-          <div className="prose prose-sm max-w-none text-gray-800 prose-headings:text-primary prose-strong:text-yellow-700 prose-a:text-blue-600" dir="auto">
+          <div className="prose prose-sm max-w-none text-gray-800 prose-headings:text-primary prose-strong:text-orange-700 prose-a:text-blue-600" dir="auto">
             <ReactMarkdown
               remarkPlugins={[remarkMath]}
               rehypePlugins={[rehypeKatex]}
@@ -223,7 +223,7 @@ const ChatPage: React.FC = () => {
         <div className="min-h-screen flex items-center justify-center p-4 font-cairo" dir="rtl">
             <div className="glass-card p-8 sm:p-12 rounded-3xl w-full max-w-md transform transition-all hover:scale-[1.01]">
                 <div className="text-center mb-8">
-                    <div className="w-16 h-16 bg-gradient-to-br from-yellow-500 to-amber-600 rounded-full mx-auto mb-4 flex items-center justify-center shadow-lg">
+                    <div className="w-16 h-16 bg-gradient-to-br from-primary to-orange-600 rounded-full mx-auto mb-4 flex items-center justify-center shadow-lg">
                         <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
                         </svg>
@@ -241,7 +241,7 @@ const ChatPage: React.FC = () => {
                             placeholder="أدخل اسمك..." 
                             value={username}
                             onChange={(e) => setUsername(e.target.value)}
-                            className="w-full p-4 rounded-xl border-2 border-gray-200 focus:border-yellow-500 focus:outline-none transition-colors text-right bg-white/80"
+                            className="w-full p-4 rounded-xl border-2 border-gray-200 focus:border-primary focus:outline-none transition-colors text-right bg-white/80"
                             required
                         />
                     </div>
@@ -254,7 +254,7 @@ const ChatPage: React.FC = () => {
                             placeholder="أدخل المفتاح هنا..." 
                             value={tempKey}
                             onChange={(e) => setTempKey(e.target.value)}
-                            className="w-full p-4 rounded-xl border-2 border-gray-200 focus:border-yellow-500 focus:outline-none transition-colors text-left bg-white/80"
+                            className="w-full p-4 rounded-xl border-2 border-gray-200 focus:border-primary focus:outline-none transition-colors text-left bg-white/80"
                             dir="ltr"
                             required
                         />
@@ -263,7 +263,7 @@ const ChatPage: React.FC = () => {
                     <button 
                         type="submit"
                         disabled={isRegistering}
-                        className="w-full bg-gradient-to-r from-yellow-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white font-bold rounded-xl text-lg px-6 py-4 transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-1 flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
+                        className="w-full bg-gradient-to-r from-primary to-orange-600 hover:from-primary-hover hover:to-orange-700 text-white font-bold rounded-xl text-lg px-6 py-4 transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-1 flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
                     >
                        {isRegistering ? (
                            <Spinner className="w-6 h-6" />
@@ -278,7 +278,7 @@ const ChatPage: React.FC = () => {
                     </button>
                 </form>
                  <div className="mt-6 flex justify-center gap-4 text-sm">
-                    <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noreferrer" className="text-yellow-600 hover:text-yellow-700 font-semibold bg-yellow-50 px-4 py-2 rounded-lg transition-colors">
+                    <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noreferrer" className="text-primary hover:text-primary-hover font-semibold bg-orange-50 px-4 py-2 rounded-lg transition-colors">
                         احصل على مفتاح
                     </a>
                 </div>
@@ -293,7 +293,7 @@ const ChatPage: React.FC = () => {
       {/* Chat Header */}
       <div className="p-5 border-b border-gray-200/50 bg-white/40 flex items-center justify-between backdrop-blur-sm z-10" dir="rtl">
         <div className="flex items-center gap-3">
-             <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-yellow-600 flex items-center justify-center text-white shadow-md">
+             <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-orange-600 flex items-center justify-center text-white shadow-md">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M8.625 12a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H8.25m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H12m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 01-2.555-.337A5.972 5.972 0 015.41 20.97a5.969 5.969 0 01-.474-.065 4.48 4.48 0 00.978-2.025c.09-.457-.133-.901-.467-1.226C3.93 16.178 3 14.189 3 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25z" />
                 </svg>
@@ -349,7 +349,7 @@ const ChatPage: React.FC = () => {
           <button
             type="submit"
             disabled={isSending || !input.trim()}
-            className="bg-gradient-to-r from-primary to-yellow-600 text-white rounded-2xl p-4 hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all transform hover:-translate-y-1 active:translate-y-0"
+            className="bg-gradient-to-r from-primary to-orange-600 text-white rounded-2xl p-4 hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all transform hover:-translate-y-1 active:translate-y-0"
           >
             <PaperAirplaneIcon className="w-6 h-6 rtl:rotate-180 transform rotate-180" />
           </button>

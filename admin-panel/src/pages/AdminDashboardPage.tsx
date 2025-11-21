@@ -62,7 +62,7 @@ const CreateBotForm: React.FC<{ onBotCreated: (bot: Bot) => void }> = ({ onBotCr
             placeholder="e.g. HR Assistant"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            className="w-full bg-gray-900 border border-gray-700 rounded-md p-3 text-white focus:ring-2 focus:ring-indigo-500"
+            className="w-full bg-gray-900 border border-gray-700 rounded-md p-3 text-white focus:ring-2 focus:ring-primary"
             required
           />
         </div>
@@ -73,7 +73,7 @@ const CreateBotForm: React.FC<{ onBotCreated: (bot: Bot) => void }> = ({ onBotCr
             placeholder="Welcome message for users..."
             value={welcomeMessage}
             onChange={(e) => setWelcomeMessage(e.target.value)}
-            className="w-full bg-gray-900 border border-gray-700 rounded-md p-3 text-white focus:ring-2 focus:ring-indigo-500"
+            className="w-full bg-gray-900 border border-gray-700 rounded-md p-3 text-white focus:ring-2 focus:ring-primary"
             required
           />
         </div>
@@ -81,7 +81,7 @@ const CreateBotForm: React.FC<{ onBotCreated: (bot: Bot) => void }> = ({ onBotCr
         <button
           type="submit"
           disabled={isLoading}
-          className="w-full flex justify-center items-center bg-indigo-600 text-white font-bold py-3 px-4 rounded-md hover:bg-indigo-700 disabled:opacity-50 transition-colors"
+          className="w-full flex justify-center items-center bg-primary text-white font-bold py-3 px-4 rounded-md hover:bg-primary-hover disabled:opacity-50 transition-colors"
         >
           {isLoading ? <Spinner /> : 'Create Bot'}
         </button>
@@ -148,11 +148,11 @@ const BotCard: React.FC<{ bot: Bot, onFileUploaded: (botId: string) => void, onD
     return (
         <div className="bg-gray-800 p-5 rounded-lg shadow-md space-y-4 border border-gray-700 flex flex-col h-full">
             <div className="flex items-center justify-between">
-                <h3 className="text-xl font-bold text-indigo-400 truncate mr-2">{bot.name}</h3>
+                <h3 className="text-xl font-bold text-primary truncate mr-2">{bot.name}</h3>
                 <div className="flex space-x-2">
                     <button
                         onClick={() => window.open(chatLink, '_blank', 'noopener,noreferrer')}
-                        className="flex items-center flex-shrink-0 px-3 py-1.5 text-sm font-medium text-white bg-indigo-500 rounded-md hover:bg-indigo-600 transition-colors"
+                        className="flex items-center flex-shrink-0 px-3 py-1.5 text-sm font-medium text-white bg-primary rounded-md hover:bg-primary-hover transition-colors"
                     >
                         <ChatBubbleIcon className="w-4 h-4 mr-2" />
                         Open Chat
@@ -187,7 +187,7 @@ const BotCard: React.FC<{ bot: Bot, onFileUploaded: (botId: string) => void, onD
                         <ul className="space-y-1">
                             {bot.documents.map((doc) => (
                                 <li key={doc._id} className="flex items-center text-xs text-gray-400 bg-gray-900/50 p-2 rounded border border-gray-700/50">
-                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-3 h-3 mr-2 text-indigo-400">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-3 h-3 mr-2 text-primary">
                                       <path fillRule="evenodd" d="M4.5 2A1.5 1.5 0 003 3.5v13A1.5 1.5 0 004.5 18h11a1.5 1.5 0 001.5-1.5V7.621a1.5 1.5 0 00-.44-1.06l-4.12-4.122A1.5 1.5 0 0011.378 2H4.5zm2.25 8.5a.75.75 0 000 1.5h6.5a.75.75 0 000-1.5h-6.5zm0 3a.75.75 0 000 1.5h6.5a.75.75 0 000-1.5h-6.5z" clipRule="evenodd" />
                                     </svg>
                                     <span className="truncate">{doc.file_name}</span>
@@ -200,7 +200,7 @@ const BotCard: React.FC<{ bot: Bot, onFileUploaded: (botId: string) => void, onD
                 </div>
 
                 <div className="flex items-center space-x-2">
-                    <label className="flex-grow cursor-pointer bg-gray-900 border border-gray-700 rounded-md p-2 text-gray-400 text-sm hover:border-indigo-500 flex justify-between items-center">
+                    <label className="flex-grow cursor-pointer bg-gray-900 border border-gray-700 rounded-md p-2 text-gray-400 text-sm hover:border-primary flex justify-between items-center">
                         <span>Upload PDF</span>
                         <UploadIcon className="w-4 h-4"/>
                         <input 
@@ -212,7 +212,7 @@ const BotCard: React.FC<{ bot: Bot, onFileUploaded: (botId: string) => void, onD
                           disabled={isUploading}
                         />
                     </label>
-                    {isUploading && <Spinner className="w-5 h-5 text-indigo-500"/>}
+                    {isUploading && <Spinner className="w-5 h-5 text-primary"/>}
                 </div>
                  {uploadError && <p className="text-red-500 text-xs mt-2">{uploadError}</p>}
                  {uploadSuccess && <p className="text-green-500 text-xs mt-2">{uploadSuccess}</p>}
