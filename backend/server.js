@@ -1,12 +1,18 @@
+
 import express from 'express';
 import mongoose from 'mongoose';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import path from 'path';
+import { fileURLToPath } from 'url';
 import botRoutes from './routes/botRoutes.js';
 import chatRoutes from './routes/chatRoutes.js';
 import Admin from './models/Admin.js';
 
 dotenv.config();
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -15,6 +21,9 @@ const MONGO_URI = process.env.MONGO_URI || "mongodb+srv://Ahmad:266216@cluster0.
 // Middleware
 app.use(cors()); // Allow all origins for dev simplicity
 app.use(express.json());
+
+// Static Middleware for Uploads
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Database Connection and Seeding
 mongoose.connect(MONGO_URI)
