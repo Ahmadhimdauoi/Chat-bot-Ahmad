@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams } from 'react-router-dom';
 import ReactMarkdown from 'react-markdown';
@@ -33,7 +34,7 @@ const ChatMessageBubble: React.FC<{ message: ChatMessage }> = ({ message }) => {
         }`}
       >
         {isAssistant ? (
-          <div className="prose prose-sm max-w-none text-gray-800 prose-headings:text-primary prose-strong:text-orange-700 prose-a:text-blue-600" dir="auto">
+          <div className="prose prose-sm max-w-none text-gray-800 prose-headings:text-primary prose-strong:text-primary prose-a:text-primary hover:prose-a:text-primary-hover prose-code:text-primary prose-code:bg-orange-50 prose-code:px-1 prose-code:rounded" dir="auto">
             <ReactMarkdown
               remarkPlugins={[remarkMath]}
               rehypePlugins={[rehypeKatex]}
