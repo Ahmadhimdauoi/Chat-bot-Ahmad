@@ -46,28 +46,40 @@ export const handleChat = async (req, res) => {
 
     // 1. RAG: Fetch Context
     const docs = await Document.find({ chatbot_id: botId });
-    const context = docs.map(doc => doc.extracted_content).join("\n\n---\n\n");
+    
+    // Improved Context Formatting: Include Filename and remove strict small limits
+    // Gemini 1.5/2.5 Flash has a ~1M token window (approx 4MB of text). 
+    // We limit to roughly 3,000,000 characters to be safe but allow many PDFs.
+    const context = docs.map(doc => {
+        return `--- START OF FILE: ${doc.file_name} ---\n${doc.extracted_content}\n--- END OF FILE: ${doc.file_name} ---`;
+    }).join("\n\n");
 
     // 2. Generate AI Response
     const ai = new GoogleGenAI({ apiKey: apiKey });
 
     const systemPrompt = bot.systemInstruction || "You are a helpful assistant. Use the provided context to answer questions.";
+    
+    // We trim strictly to avoid nodejs memory issues if files are absolutely massive, 
+    // but 2.5 million chars is enough for approx 10-15 text-heavy books.
+    const safeContext = context ? context.substring(0, 2500000) : "No document context available.";
+
     const fullPrompt = `
     ${systemPrompt}
 
     Instructions:
-    Use the following extracted text from the PDF document to answer the user's question.
-    If the answer is not in the text, strictly say "The answer is not available in the provided documents."
-    Use Markdown for formatting.
-
-    Extracted Text: 
-    ${context ? context.substring(0, 50000) : "No document context available."}
+    You have access to the following documents. Use the content within them to answer the user's question accurately.
+    - If the answer is found in a specific file, implicitly reference it (e.g., "According to Chapter 1...").
+    - If the answer is not in the text, strictly say "The answer is not available in the provided documents."
+    - Use Markdown for formatting.
 
     User Question: 
-    ${message}`;
+    ${message}
+    
+    Document Context: 
+    ${safeContext}`;
 
     const response = await ai.models.generateContent({
-      model: 'gemini-2.5-flash',
+      model: 'gemini-2.5-flash', // Flash models are best for large context windows
       contents: fullPrompt,
     });
 
@@ -83,6 +95,9 @@ export const handleChat = async (req, res) => {
     console.error("Chat error:", error);
     if (error.message && error.message.includes('API key')) {
        return res.status(401).json({ error: "Invalid Google Gemini API Key provided." });
+    }
+    if (error.message && error.message.includes('429')) {
+       return res.status(429).json({ error: "Too many requests or quota exceeded. Please try again later." });
     }
     res.status(500).json({ error: "AI processing failed. Please check your key or try again." });
   }
