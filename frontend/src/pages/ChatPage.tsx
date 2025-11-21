@@ -1,0 +1,316 @@
+import React, { useState, useEffect, useRef } from 'react';
+import { useParams } from 'react-router-dom';
+import ReactMarkdown from 'react-markdown';
+import remarkMath from 'remark-math';
+import rehypeKatex from 'rehype-katex';
+import { sendChatMessage, getBot, fetchChatHistory } from '../services/apiService';
+import Spinner from '../components/Spinner';
+import PaperAirplaneIcon from '../components/icons/PaperAirplaneIcon';
+import 'katex/dist/katex.min.css';
+
+// Types
+interface ChatMessage {
+  id: string;
+  role: 'user' | 'assistant';
+  content: string;
+}
+
+interface Bot {
+  _id: string;
+  name: string;
+  welcomeMessage: string;
+}
+
+const ChatMessageBubble: React.FC<{ message: ChatMessage }> = ({ message }) => {
+  const isAssistant = message.role === 'assistant';
+  return (
+    <div className={`flex ${isAssistant ? 'justify-start' : 'justify-end'} mb-4 animate-slide-in`}>
+      <div
+        className={`max-w-[90%] md:max-w-2xl px-5 py-4 rounded-2xl text-sm md:text-base shadow-lg backdrop-blur-sm font-cairo ${
+          isAssistant
+            ? 'bg-white/95 text-gray-800 rounded-br-none border-r-4 border-primary glass-card'
+            : 'bg-gradient-to-br from-primary to-yellow-600 text-white rounded-bl-none'
+        }`}
+      >
+        {isAssistant ? (
+          <div className="prose prose-sm max-w-none text-gray-800 prose-headings:text-primary prose-strong:text-yellow-700 prose-a:text-blue-600" dir="auto">
+            <ReactMarkdown
+              remarkPlugins={[remarkMath]}
+              rehypePlugins={[rehypeKatex]}
+            >
+              {message.content}
+            </ReactMarkdown>
+          </div>
+        ) : (
+          <p className="whitespace-pre-wrap leading-relaxed font-medium" dir="auto">{message.content}</p>
+        )}
+      </div>
+    </div>
+  );
+};
+
+const ChatPage: React.FC = () => {
+  const { botId } = useParams<{ botId: string }>();
+
+  const [bot, setBot] = useState<Bot | null>(null);
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [input, setInput] = useState('');
+  const [isSending, setIsSending] = useState(false);
+  const [isLoadingBot, setIsLoadingBot] = useState(true);
+  const [error, setError] = useState('');
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // Auth State
+  const [userApiKey, setUserApiKey] = useState('');
+  const [hasAccess, setHasAccess] = useState(false);
+  const [tempKey, setTempKey] = useState('');
+
+  // Check for existing key on mount
+  useEffect(() => {
+    const storedKey = localStorage.getItem('gemini_api_key');
+    if (storedKey) {
+      setUserApiKey(storedKey);
+      setTempKey(storedKey);
+      setHasAccess(true);
+    }
+  }, []);
+
+  // Initial Load of Bot details
+  useEffect(() => {
+    const loadBot = async () => {
+        if (!botId) return;
+        try {
+            const botData = await getBot(botId);
+            setBot(botData);
+        } catch (err: any) {
+            setError("لم يتم العثور على المجموعة أو تم حذفها.");
+        } finally {
+            setIsLoadingBot(false);
+        }
+    };
+    loadBot();
+  }, [botId]);
+
+  // Initialize Chat messages (History or Welcome) after access is granted
+  useEffect(() => {
+    const initChat = async () => {
+        if (hasAccess && bot && userApiKey) {
+            try {
+                const history = await fetchChatHistory(botId!, userApiKey);
+                if (history && history.length > 0) {
+                    setMessages(history);
+                } else {
+                    setMessages([{
+                        id: 'init',
+                        role: 'assistant',
+                        content: bot.welcomeMessage || "مرحباً بك! كيف يمكنني مساعدتك اليوم؟"
+                    }]);
+                }
+            } catch (e) {
+                // Fallback if history fails
+                setMessages([{
+                    id: 'init',
+                    role: 'assistant',
+                    content: bot.welcomeMessage || "مرحباً بك! كيف يمكنني مساعدتك اليوم؟"
+                }]);
+            }
+        }
+    };
+    initChat();
+  }, [hasAccess, bot, userApiKey, botId]);
+
+  // Auto-scroll
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
+
+  const handleKeySubmit = (e: React.FormEvent) => {
+      e.preventDefault();
+      if (tempKey.trim().length > 10) {
+          const cleanKey = tempKey.trim();
+          setUserApiKey(cleanKey);
+          setHasAccess(true);
+          localStorage.setItem('gemini_api_key', cleanKey);
+      } else {
+          alert("يرجى إدخال مفتاح API صالح");
+      }
+  };
+
+  const handleLogout = () => {
+    setHasAccess(false);
+    setUserApiKey('');
+    setTempKey('');
+    setMessages([]);
+    localStorage.removeItem('gemini_api_key');
+  };
+
+  const handleSendMessage = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!input.trim() || isSending || !botId || !userApiKey) return;
+
+    const userText = input;
+    const userMessage: ChatMessage = { id: Date.now().toString(), role: 'user', content: userText };
+    
+    setMessages(prev => [...prev, userMessage]);
+    setInput('');
+    setIsSending(true);
+    setError('');
+
+    try {
+      const responseMessage = await sendChatMessage(botId, userText, userApiKey);
+      setMessages(prev => [...prev, responseMessage]);
+    } catch (err: any) {
+      // If invalid key, reset access
+      if (err.message && err.message.includes('Invalid Google Gemini API Key')) {
+         handleLogout();
+         alert("مفتاح API غير صالح. يرجى التحقق والمحاولة مرة أخرى.");
+      }
+
+      setMessages(prev => [...prev, {
+          id: Date.now().toString(),
+          role: 'assistant',
+          content: `**خطأ:** ${err.message || "حدث خطأ أثناء الاتصال بالخادم."}`
+      }]);
+    } finally {
+      setIsSending(false);
+    }
+  };
+
+  // 1. Loading State
+  if (isLoadingBot) {
+      return (
+        <div className="flex h-screen items-center justify-center bg-background">
+            <div className="flex flex-col items-center">
+                <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center shadow-xl animate-bounce">
+                     <Spinner className="w-8 h-8 text-primary"/>
+                </div>
+                <p className="mt-4 text-gray-600 font-semibold font-cairo">جاري التحميل...</p>
+            </div>
+        </div>
+      );
+  }
+
+  // 2. Error State (Bot not found)
+  if (!bot) {
+      return <div className="text-center mt-20 text-red-500 text-xl font-bold font-cairo">{error}</div>;
+  }
+
+  // 3. Key Entry Gatekeeper (Login Page)
+  if (!hasAccess) {
+      return (
+        <div className="min-h-screen flex items-center justify-center p-4 font-cairo" dir="rtl">
+            <div className="glass-card p-8 sm:p-12 rounded-3xl w-full max-w-md transform transition-all hover:scale-[1.01]">
+                <div className="text-center mb-8">
+                    <div className="w-16 h-16 bg-gradient-to-br from-yellow-500 to-amber-600 rounded-full mx-auto mb-4 flex items-center justify-center shadow-lg">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+                        </svg>
+                    </div>
+                    <h1 className="text-3xl font-bold text-gray-800 mb-2">مفتاح Gemini API</h1>
+                    <p className="text-gray-600">للبدء في المحادثة مع <strong>{bot.name}</strong>، يرجى إدخال مفتاح API.</p>
+                </div>
+                
+                <form onSubmit={handleKeySubmit} className="space-y-6 text-right">
+                    <div className="relative">
+                         <label htmlFor="api-key-input" className="block text-sm font-semibold text-gray-700 mb-2">مفتاح API</label>
+                        <input 
+                            id="api-key-input"
+                            type="password" 
+                            placeholder="أدخل المفتاح هنا..." 
+                            value={tempKey}
+                            onChange={(e) => setTempKey(e.target.value)}
+                            className="w-full p-4 rounded-xl border-2 border-gray-200 focus:border-yellow-500 focus:outline-none transition-colors text-left bg-white/80"
+                            required
+                        />
+                    </div>
+
+                    <button 
+                        type="submit" 
+                        className="w-full bg-gradient-to-r from-yellow-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white font-bold rounded-xl text-lg px-6 py-4 transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-1 flex items-center justify-center gap-2"
+                    >
+                       <span>تسجيل الدخول</span>
+                       <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 transform rotate-180" viewBox="0 0 20 20" fill="currentColor">
+                            <path fillRule="evenodd" d="M3 3a1 1 0 011 1v12a1 1 0 11-2 0V4a1 1 0 011-1zm7.707 3.293a1 1 0 010 1.414L9.414 9H17a1 1 0 110 2H9.414l1.293 1.293a1 1 0 01-1.414 1.414l-3-3a1 1 0 010-1.414l3-3a1 1 0 011.414 0z" clipRule="evenodd" />
+                        </svg>
+                    </button>
+                </form>
+                 <div className="mt-6 flex justify-center gap-4 text-sm">
+                    <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noreferrer" className="text-yellow-600 hover:text-yellow-700 font-semibold bg-yellow-50 px-4 py-2 rounded-lg transition-colors">
+                        احصل على مفتاح
+                    </a>
+                </div>
+            </div>
+        </div>
+      );
+  }
+
+  // 4. Main Chat Interface
+  return (
+    <div className="flex flex-col h-[calc(100vh-2rem)] md:h-[calc(100vh-4rem)] max-w-5xl mx-auto glass-card rounded-3xl overflow-hidden font-cairo mt-4 md:mt-8">
+      {/* Chat Header */}
+      <div className="p-5 border-b border-gray-200/50 bg-white/40 flex items-center justify-between backdrop-blur-sm z-10" dir="rtl">
+        <div className="flex items-center gap-3">
+             <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-yellow-600 flex items-center justify-center text-white shadow-md">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M8.625 12a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H8.25m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H12m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 01-2.555-.337A5.972 5.972 0 015.41 20.97a5.969 5.969 0 01-.474-.065 4.48 4.48 0 00.978-2.025c.09-.457-.133-.901-.467-1.226C3.93 16.178 3 14.189 3 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25z" />
+                </svg>
+             </div>
+            <div>
+                <h2 className="text-xl font-bold text-gray-800">{bot.name}</h2>
+                <span className="flex items-center text-xs text-green-600 font-semibold">
+                    <span className="w-2 h-2 bg-green-500 rounded-full mr-1 animate-pulse"></span>
+                    متصل الآن
+                </span>
+            </div>
+        </div>
+        <div>
+            <button onClick={handleLogout} className="text-sm font-semibold text-red-500 hover:text-red-700 bg-red-50/80 hover:bg-red-100 px-4 py-2 rounded-xl transition-colors border border-red-100">
+                خروج
+            </button>
+        </div>
+      </div>
+
+      {/* Messages Area */}
+      <div className="flex-grow p-4 md:p-6 overflow-y-auto bg-gray-50/30 scroll-smooth">
+        {messages.map(msg => (
+          <ChatMessageBubble key={msg.id} message={msg} />
+        ))}
+        {isSending && (
+          <div className="flex justify-start animate-slide-in mb-4">
+             <div className="px-5 py-4 rounded-2xl bg-white/90 text-gray-500 rounded-br-none border border-gray-100 flex items-center shadow-sm gap-3">
+                <div className="flex space-x-1">
+                    <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '0s' }}></div>
+                    <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                    <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '0.4s' }}></div>
+                </div>
+                <span className="text-sm font-medium text-gray-400">جاري المعالجة...</span>
+             </div>
+          </div>
+        )}
+        <div ref={messagesEndRef} />
+      </div>
+
+      {/* Input Area */}
+      <div className="p-4 border-t border-gray-200/50 bg-white/60 backdrop-blur-md" dir="rtl">
+        <form onSubmit={handleSendMessage} className="flex items-center gap-3">
+          <input
+            type="text"
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            placeholder="اسأل عن محتوى الملف..."
+            className="flex-grow bg-white border-2 border-gray-200 focus:border-primary rounded-2xl py-3 px-6 text-gray-800 text-lg focus:outline-none transition-all shadow-sm"
+          />
+          <button
+            type="submit"
+            disabled={isSending || !input.trim()}
+            className="bg-gradient-to-r from-primary to-yellow-600 text-white rounded-2xl p-4 hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all transform hover:-translate-y-1 active:translate-y-0"
+          >
+            <PaperAirplaneIcon className="w-6 h-6 rtl:rotate-180 transform rotate-180" />
+          </button>
+        </form>
+      </div>
+    </div>
+  );
+};
+
+export default ChatPage;
