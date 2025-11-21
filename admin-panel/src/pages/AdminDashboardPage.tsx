@@ -1,17 +1,24 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { createBot, listBots, uploadFile } from '../services/adminApiService';
+import { createBot, listBots, uploadFile, deleteBot } from '../services/adminApiService';
 import Spinner from '../components/Spinner';
 import ClipboardIcon from '../components/icons/ClipboardIcon';
 import PlusIcon from '../components/icons/PlusIcon';
 import UploadIcon from '../components/icons/UploadIcon';
 import ChatBubbleIcon from '../components/icons/ChatBubbleIcon';
+import TrashIcon from '../components/icons/TrashIcon';
 
-// Types defined locally
+interface Document {
+    _id: string;
+    file_name: string;
+    file_path: string;
+}
+
 interface Bot {
   _id: string;
   name: string;
   welcomeMessage: string;
+  documents: Document[]; // Documents are now aggregated from backend
 }
 
 const CreateBotForm: React.FC<{ onBotCreated: (bot: Bot) => void }> = ({ onBotCreated }) => {
@@ -30,7 +37,8 @@ const CreateBotForm: React.FC<{ onBotCreated: (bot: Bot) => void }> = ({ onBotCr
     setError('');
     try {
       const newBot = await createBot(name, welcomeMessage);
-      onBotCreated(newBot);
+      // Ensure structure matches Bot interface
+      onBotCreated({ ...newBot, documents: [] });
       setName('');
       setWelcomeMessage('Hello! How can I help you today?');
     } catch (err: any) {
@@ -82,8 +90,9 @@ const CreateBotForm: React.FC<{ onBotCreated: (bot: Bot) => void }> = ({ onBotCr
   );
 };
 
-const BotCard: React.FC<{ bot: Bot }> = ({ bot }) => {
+const BotCard: React.FC<{ bot: Bot, onFileUploaded: (botId: string) => void, onDelete: (botId: string) => void }> = ({ bot, onFileUploaded, onDelete }) => {
     const [isUploading, setIsUploading] = useState(false);
+    const [isDeleting, setIsDeleting] = useState(false);
     const [uploadError, setUploadError] = useState('');
     const [uploadSuccess, setUploadSuccess] = useState('');
     const [copySuccess, setCopySuccess] = useState('');
@@ -111,6 +120,7 @@ const BotCard: React.FC<{ bot: Bot }> = ({ bot }) => {
             try {
                 await uploadFile(bot._id, file);
                 setUploadSuccess('PDF processed & added to KB!');
+                onFileUploaded(bot._id); // Refresh list
                 if (fileInputRef.current) fileInputRef.current.value = '';
             } catch (err: any) {
                 setUploadError(err.message);
@@ -119,21 +129,43 @@ const BotCard: React.FC<{ bot: Bot }> = ({ bot }) => {
             }
         }
     };
+
+    const handleDelete = async () => {
+        if (window.confirm(`Are you sure you want to delete "${bot.name}"? This will delete all uploaded files associated with it.`)) {
+            setIsDeleting(true);
+            try {
+                await deleteBot(bot._id);
+                onDelete(bot._id);
+            } catch (err: any) {
+                alert("Failed to delete bot: " + err.message);
+                setIsDeleting(false);
+            }
+        }
+    };
     
-    // Pointing to the Frontend Chat App Port (Assuming 5173)
     const chatLink = `http://localhost:5173/#/chat/${bot._id}`;
 
     return (
-        <div className="bg-gray-800 p-5 rounded-lg shadow-md space-y-4 border border-gray-700">
+        <div className="bg-gray-800 p-5 rounded-lg shadow-md space-y-4 border border-gray-700 flex flex-col h-full">
             <div className="flex items-center justify-between">
                 <h3 className="text-xl font-bold text-indigo-400 truncate mr-2">{bot.name}</h3>
-                <button
-                    onClick={() => window.open(chatLink, '_blank', 'noopener,noreferrer')}
-                    className="flex items-center flex-shrink-0 px-3 py-1.5 text-sm font-medium text-white bg-indigo-500 rounded-md hover:bg-indigo-600 transition-colors"
-                >
-                    <ChatBubbleIcon className="w-4 h-4 mr-2" />
-                    Open Chat
-                </button>
+                <div className="flex space-x-2">
+                    <button
+                        onClick={() => window.open(chatLink, '_blank', 'noopener,noreferrer')}
+                        className="flex items-center flex-shrink-0 px-3 py-1.5 text-sm font-medium text-white bg-indigo-500 rounded-md hover:bg-indigo-600 transition-colors"
+                    >
+                        <ChatBubbleIcon className="w-4 h-4 mr-2" />
+                        Open Chat
+                    </button>
+                    <button
+                        onClick={handleDelete}
+                        disabled={isDeleting}
+                        className="p-2 text-red-400 bg-red-400/10 rounded-md hover:bg-red-400/20 transition-colors"
+                        title="Delete Bot"
+                    >
+                        {isDeleting ? <Spinner className="w-4 h-4 text-red-400" /> : <TrashIcon className="w-4 h-4" />}
+                    </button>
+                </div>
             </div>
             
             <div className="space-y-2 text-sm">
@@ -146,8 +178,27 @@ const BotCard: React.FC<{ bot: Bot }> = ({ bot }) => {
                 </div>
             </div>
 
-            <div className="border-t border-gray-700 pt-4">
-                <h4 className="font-semibold text-gray-300 mb-2 text-sm">Knowledge Base (PDF)</h4>
+            <div className="border-t border-gray-700 pt-4 flex-grow">
+                <h4 className="font-semibold text-gray-300 mb-2 text-sm">Knowledge Base (Files)</h4>
+                
+                {/* List of Uploaded Files */}
+                <div className="mb-4 space-y-2">
+                    {bot.documents && bot.documents.length > 0 ? (
+                        <ul className="space-y-1">
+                            {bot.documents.map((doc) => (
+                                <li key={doc._id} className="flex items-center text-xs text-gray-400 bg-gray-900/50 p-2 rounded border border-gray-700/50">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-3 h-3 mr-2 text-indigo-400">
+                                      <path fillRule="evenodd" d="M4.5 2A1.5 1.5 0 003 3.5v13A1.5 1.5 0 004.5 18h11a1.5 1.5 0 001.5-1.5V7.621a1.5 1.5 0 00-.44-1.06l-4.12-4.122A1.5 1.5 0 0011.378 2H4.5zm2.25 8.5a.75.75 0 000 1.5h6.5a.75.75 0 000-1.5h-6.5zm0 3a.75.75 0 000 1.5h6.5a.75.75 0 000-1.5h-6.5z" clipRule="evenodd" />
+                                    </svg>
+                                    <span className="truncate">{doc.file_name}</span>
+                                </li>
+                            ))}
+                        </ul>
+                    ) : (
+                        <p className="text-xs text-gray-500 italic">No files uploaded yet.</p>
+                    )}
+                </div>
+
                 <div className="flex items-center space-x-2">
                     <label className="flex-grow cursor-pointer bg-gray-900 border border-gray-700 rounded-md p-2 text-gray-400 text-sm hover:border-indigo-500 flex justify-between items-center">
                         <span>Upload PDF</span>
@@ -197,6 +248,15 @@ const AdminDashboardPage: React.FC = () => {
     setBots(prev => [newBot, ...prev]);
   };
 
+  const handleBotDeleted = (botId: string) => {
+    setBots(prev => prev.filter(b => b._id !== botId));
+  };
+
+  // Trigger a refresh when a file is uploaded to show the new filename immediately
+  const handleFileUploaded = () => {
+    fetchBots(); 
+  };
+
   return (
     <div>
       <CreateBotForm onBotCreated={handleBotCreated} />
@@ -208,7 +268,14 @@ const AdminDashboardPage: React.FC = () => {
         {!isLoading && !error && (
           bots.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {bots.map(bot => <BotCard key={bot._id} bot={bot} />)}
+              {bots.map(bot => (
+                <BotCard 
+                    key={bot._id} 
+                    bot={bot} 
+                    onFileUploaded={handleFileUploaded}
+                    onDelete={handleBotDeleted}
+                />
+               ))}
             </div>
           ) : (
             <p className="text-center text-gray-400 mt-8">No chatbots created yet.</p>

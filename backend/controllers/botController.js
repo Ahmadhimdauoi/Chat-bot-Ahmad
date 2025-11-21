@@ -15,10 +15,23 @@ const getDefaultAdminId = async () => {
   return admin ? admin._id : null;
 };
 
-// Get all bots
+// Get all bots with their documents
 export const getAllBots = async (req, res) => {
   try {
-    const bots = await Chatbot.find().sort({ created_at: -1 });
+    // Use aggregation to join documents with chatbots
+    const bots = await Chatbot.aggregate([
+      {
+        $lookup: {
+          from: 'documents', // The collection name for Document model
+          localField: '_id',
+          foreignField: 'chatbot_id',
+          as: 'documents'
+        }
+      },
+      {
+        $sort: { created_at: -1 }
+      }
+    ]);
     res.json(bots);
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -49,8 +62,43 @@ export const createBot = async (req, res) => {
     });
     
     await newBot.save();
-    res.status(201).json(newBot);
+    
+    // Return object consistent with aggregation structure
+    const botObject = newBot.toObject();
+    botObject.documents = [];
+    
+    res.status(201).json(botObject);
   } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+// Delete Bot
+export const deleteBot = async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    // 1. Find documents to delete physical files
+    const documents = await Document.find({ chatbot_id: id });
+    
+    documents.forEach(doc => {
+        if (doc.file_path) {
+            const fullPath = path.join(__dirname, '..', doc.file_path);
+            if (fs.existsSync(fullPath)) {
+                fs.unlinkSync(fullPath);
+            }
+        }
+    });
+
+    // 2. Delete Documents from DB
+    await Document.deleteMany({ chatbot_id: id });
+
+    // 3. Delete Chatbot
+    await Chatbot.findByIdAndDelete(id);
+
+    res.json({ message: "Bot deleted successfully" });
+  } catch (error) {
+    console.error("Delete error:", error);
     res.status(500).json({ error: error.message });
   }
 };
