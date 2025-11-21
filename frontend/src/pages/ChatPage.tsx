@@ -78,12 +78,17 @@ const ChatMessageBubble: React.FC<{ message: ChatMessage }> = ({ message }) => {
                     </code>
                     )
                 },
-                table: ({node, ...props}) => <div className="overflow-x-auto my-6 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm"><table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700" {...props} /></div>,
+                // UPDATED TABLE STYLES FOR BETTER ACCOUNTING LAYOUT
+                table: ({node, ...props}) => (
+                  <div className="overflow-x-auto my-6 rounded border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800/50 shadow-sm">
+                    <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700 border-collapse" {...props} />
+                  </div>
+                ),
                 thead: ({node, ...props}) => <thead className="bg-gray-50 dark:bg-gray-800" {...props} />,
-                tbody: ({node, ...props}) => <tbody className="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-800" {...props} />,
+                tbody: ({node, ...props}) => <tbody className="bg-white dark:bg-gray-900/80 divide-y divide-gray-200 dark:divide-gray-700" {...props} />,
                 tr: ({node, ...props}) => <tr className="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors" {...props} />,
-                th: ({node, ...props}) => <th className="px-4 py-3 text-right text-xs font-bold text-gray-900 dark:text-white uppercase tracking-wider bg-gray-100 dark:bg-gray-700/50" {...props} />,
-                td: ({node, ...props}) => <td className="px-4 py-3 text-sm text-gray-700 dark:text-gray-300 align-top leading-relaxed" {...props} />,
+                th: ({node, ...props}) => <th className="px-4 py-3 text-right text-xs font-bold text-gray-900 dark:text-white uppercase tracking-wider border-l border-gray-200 dark:border-gray-700 last:border-l-0 whitespace-nowrap bg-gray-100 dark:bg-gray-700" {...props} />,
+                td: ({node, ...props}) => <td className="px-4 py-3 text-sm text-gray-700 dark:text-gray-300 whitespace-normal break-words border-l border-gray-200 dark:border-gray-700 last:border-l-0 align-top leading-relaxed" {...props} />,
                 strong: ({node, ...props}) => <strong className="font-bold text-gray-900 dark:text-white" {...props} />,
                 hr: ({node, ...props}) => <hr className="my-6 border-gray-200 dark:border-gray-700" {...props} />,
               }}

@@ -73,14 +73,15 @@ export const handleChat = async (req, res) => {
     - Use Markdown for formatting.
 
     STRICT FORMATTING RULES:
-    1. **Tables**: You MUST use Markdown tables for ALL structured data, especially:
+    1. **Tables**: You MUST use Markdown tables for ALL structured data, specifically:
        - Accounting Journal Entries (القيود اليومية).
        - General Ledgers (دفتر الأستاذ).
        - Trial Balances (ميزان المراجعة).
        - Financial Statements (Lists of assets, liabilities, equity).
        - Comparisons between items.
     
-    2. **Journal Entries Format**: When asked for journal entries, format them clearly in a table with columns like: [Date | Description/Account | Debit | Credit].
+    2. **Journal Entries Format**: When asked for journal entries, format them in a clear Markdown Table.
+       Recommended Columns: | التاريخ (Date) | البيان (Description/Account) | مدين (Debit) | دائن (Credit) |
     
     3. **T-Accounts**: Represents T-accounts using tables with two main columns (Debit side / Credit side).
 
