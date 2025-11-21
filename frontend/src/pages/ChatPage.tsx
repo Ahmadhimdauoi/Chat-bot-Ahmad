@@ -226,7 +226,7 @@ const ChatPage: React.FC = () => {
   // 1. Loading State
   if (isLoadingBot) {
       return (
-        <div className="flex h-screen items-center justify-center bg-background dark:bg-gray-900">
+        <div className="flex h-screen items-center justify-center bg-gray-100 dark:bg-gray-900 transition-colors duration-300">
             <div className="flex flex-col items-center">
                 <div className="w-16 h-16 bg-white dark:bg-gray-800 rounded-full flex items-center justify-center shadow-xl animate-bounce">
                      <Spinner className="w-8 h-8 text-primary"/>
@@ -245,7 +245,7 @@ const ChatPage: React.FC = () => {
   // 3. Key Entry Gatekeeper (Login Page)
   if (!hasAccess) {
       return (
-        <div className="min-h-screen flex items-center justify-center p-4 font-cairo bg-background dark:bg-gray-900" dir="rtl">
+        <div className="min-h-screen flex items-center justify-center p-4 font-cairo bg-gray-100 dark:bg-gray-900 transition-colors duration-300" dir="rtl">
              {/* Theme Toggle Absolute */}
              <button onClick={toggleTheme} className="absolute top-4 left-4 p-2 rounded-full bg-white dark:bg-gray-800 shadow-md text-gray-600 dark:text-yellow-400 transition-colors z-50">
                 {isDarkMode ? <SunIcon className="w-6 h-6"/> : <MoonIcon className="w-6 h-6"/>}
