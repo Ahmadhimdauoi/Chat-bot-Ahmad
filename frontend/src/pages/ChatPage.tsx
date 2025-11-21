@@ -27,19 +27,66 @@ interface Bot {
 const ChatMessageBubble: React.FC<{ message: ChatMessage }> = ({ message }) => {
   const isAssistant = message.role === 'assistant';
   return (
-    <div className={`flex ${isAssistant ? 'justify-start' : 'justify-end'} mb-4 animate-slide-in`}>
+    <div className={`flex ${isAssistant ? 'justify-start' : 'justify-end'} mb-6 animate-slide-in group`}>
+      {/* Avatar for Assistant */}
+      {isAssistant && (
+        <div className="flex-shrink-0 ml-3 mt-1 hidden md:block">
+          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-orange-600 flex items-center justify-center shadow-md">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5 text-white">
+              <path fillRule="evenodd" d="M4.804 21.644A6.707 6.707 0 006 21.75a6.721 6.721 0 003.583-1.029c.774.182 1.584.279 2.417.279 5.322 0 9.75-3.97 9.75-9 0-5.03-4.428-9-9.75-9s-9.75 3.97-9.75 9c0 2.409 1.025 4.587 2.718 6.163.193.681-.24 2.419-.365 3.48z" clipRule="evenodd" />
+            </svg>
+          </div>
+        </div>
+      )}
+
       <div
-        className={`max-w-[90%] md:max-w-2xl px-5 py-4 rounded-2xl text-sm md:text-base shadow-lg backdrop-blur-sm font-cairo ${
+        className={`relative max-w-[95%] md:max-w-3xl px-6 py-5 rounded-2xl text-sm md:text-base shadow-sm font-cairo leading-relaxed transition-all duration-200 hover:shadow-md ${
           isAssistant
-            ? 'bg-white/95 dark:bg-gray-800/95 text-gray-800 dark:text-gray-100 rounded-br-none border-r-4 border-primary shadow-sm border border-gray-100 dark:border-gray-700'
-            : 'bg-gradient-to-br from-primary to-orange-600 text-white rounded-bl-none'
+            ? 'bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-100 rounded-tr-none border border-gray-100 dark:border-gray-700/50'
+            : 'bg-gradient-to-br from-primary to-orange-600 text-white rounded-tl-none shadow-orange-500/20'
         }`}
       >
         {isAssistant ? (
-          <div className="prose prose-sm max-w-none text-gray-800 dark:text-gray-200 prose-headings:text-primary prose-strong:text-primary prose-a:text-primary hover:prose-a:text-primary-hover prose-code:text-primary prose-code:bg-orange-50 dark:prose-code:bg-gray-700 dark:prose-code:text-orange-300 prose-code:px-1 prose-code:rounded prose-p:leading-relaxed" dir="auto">
+          <div className="markdown-content" dir="auto">
             <ReactMarkdown
               remarkPlugins={[remarkMath]}
               rehypePlugins={[rehypeKatex]}
+              components={{
+                h1: ({node, ...props}) => <h1 className="text-2xl font-bold text-primary mt-6 mb-3 pb-2 border-b border-gray-100 dark:border-gray-700" {...props} />,
+                h2: ({node, ...props}) => <h2 className="text-xl font-bold text-gray-800 dark:text-gray-100 mt-5 mb-2" {...props} />,
+                h3: ({node, ...props}) => <h3 className="text-lg font-bold text-gray-700 dark:text-gray-200 mt-4 mb-2" {...props} />,
+                p: ({node, ...props}) => <p className="mb-3 text-gray-700 dark:text-gray-300 leading-7" {...props} />,
+                ul: ({node, ...props}) => <ul className="list-disc list-inside space-y-1 marker:text-primary mb-4 text-gray-700 dark:text-gray-300" {...props} />,
+                ol: ({node, ...props}) => <ol className="list-decimal list-inside space-y-1 marker:text-primary mb-4 text-gray-700 dark:text-gray-300" {...props} />,
+                li: ({node, ...props}) => <li className="" {...props} />,
+                blockquote: ({node, ...props}) => <blockquote className="border-r-4 border-primary bg-gray-50 dark:bg-gray-900/50 p-3 my-4 rounded-l-lg text-gray-600 dark:text-gray-400 italic" {...props} />,
+                a: ({node, ...props}) => <a className="text-blue-500 hover:text-blue-600 dark:text-blue-400 underline decoration-blue-300 transition-colors" target="_blank" rel="noopener noreferrer" {...props} />,
+                code: ({node, inline, className, children, ...props}: any) => {
+                    const match = /language-(\w+)/.exec(className || '')
+                    return !inline ? (
+                    <div className="relative my-4 group/code" dir="ltr">
+                        <div className="absolute right-2 top-2 text-[10px] uppercase text-gray-400 bg-gray-800/50 px-2 py-1 rounded opacity-0 group-hover/code:opacity-100 transition-opacity">{match ? match[1] : 'Code'}</div>
+                        <pre className="bg-[#1e1e1e] text-gray-200 p-4 rounded-xl overflow-x-auto border border-gray-700 shadow-lg font-mono text-sm leading-relaxed">
+                            <code className={className} {...props}>
+                                {children}
+                            </code>
+                        </pre>
+                    </div>
+                    ) : (
+                    <code className="bg-gray-100 dark:bg-gray-700 text-primary dark:text-orange-300 px-1.5 py-0.5 rounded-md text-sm font-mono border border-gray-200 dark:border-gray-600 mx-1" {...props}>
+                        {children}
+                    </code>
+                    )
+                },
+                table: ({node, ...props}) => <div className="overflow-x-auto my-6 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm"><table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700" {...props} /></div>,
+                thead: ({node, ...props}) => <thead className="bg-gray-50 dark:bg-gray-800" {...props} />,
+                tbody: ({node, ...props}) => <tbody className="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-800" {...props} />,
+                tr: ({node, ...props}) => <tr className="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors" {...props} />,
+                th: ({node, ...props}) => <th className="px-4 py-3 text-right text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider" {...props} />,
+                td: ({node, ...props}) => <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300" {...props} />,
+                strong: ({node, ...props}) => <strong className="font-bold text-gray-900 dark:text-white" {...props} />,
+                hr: ({node, ...props}) => <hr className="my-6 border-gray-200 dark:border-gray-700" {...props} />,
+              }}
             >
               {message.content}
             </ReactMarkdown>
