@@ -7,6 +7,8 @@ import rehypeKatex from 'rehype-katex';
 import { sendChatMessage, getBot, fetchChatHistory, registerUser } from '../services/apiService';
 import Spinner from '../components/Spinner';
 import PaperAirplaneIcon from '../components/icons/PaperAirplaneIcon';
+import SunIcon from '../components/icons/SunIcon';
+import MoonIcon from '../components/icons/MoonIcon';
 import 'katex/dist/katex.min.css';
 
 // Types
@@ -29,12 +31,12 @@ const ChatMessageBubble: React.FC<{ message: ChatMessage }> = ({ message }) => {
       <div
         className={`max-w-[90%] md:max-w-2xl px-5 py-4 rounded-2xl text-sm md:text-base shadow-lg backdrop-blur-sm font-cairo ${
           isAssistant
-            ? 'bg-white/95 text-gray-800 rounded-br-none border-r-4 border-primary glass-card'
+            ? 'bg-white/95 dark:bg-gray-800/95 text-gray-800 dark:text-gray-100 rounded-br-none border-r-4 border-primary glass-card dark:border-gray-700'
             : 'bg-gradient-to-br from-primary to-orange-600 text-white rounded-bl-none'
         }`}
       >
         {isAssistant ? (
-          <div className="prose prose-sm max-w-none text-gray-800 prose-headings:text-primary prose-strong:text-primary prose-a:text-primary hover:prose-a:text-primary-hover prose-code:text-primary prose-code:bg-orange-50 prose-code:px-1 prose-code:rounded" dir="auto">
+          <div className="prose prose-sm max-w-none text-gray-800 dark:text-gray-200 prose-headings:text-primary prose-strong:text-primary prose-a:text-primary hover:prose-a:text-primary-hover prose-code:text-primary prose-code:bg-orange-50 dark:prose-code:bg-gray-700 dark:prose-code:text-orange-300 prose-code:px-1 prose-code:rounded prose-p:leading-relaxed" dir="auto">
             <ReactMarkdown
               remarkPlugins={[remarkMath]}
               rehypePlugins={[rehypeKatex]}
@@ -67,6 +69,28 @@ const ChatPage: React.FC = () => {
   const [hasAccess, setHasAccess] = useState(false);
   const [tempKey, setTempKey] = useState('');
   const [isRegistering, setIsRegistering] = useState(false);
+
+  // Theme State
+  const [isDarkMode, setIsDarkMode] = useState(() => {
+    const savedTheme = localStorage.getItem('theme');
+    return savedTheme === 'dark' || (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches);
+  });
+
+  // Apply Theme
+  useEffect(() => {
+    const html = document.documentElement;
+    if (isDarkMode) {
+        html.classList.add('dark');
+        localStorage.setItem('theme', 'dark');
+    } else {
+        html.classList.remove('dark');
+        localStorage.setItem('theme', 'light');
+    }
+  }, [isDarkMode]);
+
+  const toggleTheme = () => {
+      setIsDarkMode(!isDarkMode);
+  };
 
   // Check for existing key on mount
   useEffect(() => {
@@ -202,12 +226,12 @@ const ChatPage: React.FC = () => {
   // 1. Loading State
   if (isLoadingBot) {
       return (
-        <div className="flex h-screen items-center justify-center bg-background">
+        <div className="flex h-screen items-center justify-center bg-background dark:bg-gray-900">
             <div className="flex flex-col items-center">
-                <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center shadow-xl animate-bounce">
+                <div className="w-16 h-16 bg-white dark:bg-gray-800 rounded-full flex items-center justify-center shadow-xl animate-bounce">
                      <Spinner className="w-8 h-8 text-primary"/>
                 </div>
-                <p className="mt-4 text-gray-600 font-semibold font-cairo">جاري التحميل...</p>
+                <p className="mt-4 text-gray-600 dark:text-gray-400 font-semibold font-cairo">جاري التحميل...</p>
             </div>
         </div>
       );
@@ -221,41 +245,46 @@ const ChatPage: React.FC = () => {
   // 3. Key Entry Gatekeeper (Login Page)
   if (!hasAccess) {
       return (
-        <div className="min-h-screen flex items-center justify-center p-4 font-cairo" dir="rtl">
-            <div className="glass-card p-8 sm:p-12 rounded-3xl w-full max-w-md transform transition-all hover:scale-[1.01]">
+        <div className="min-h-screen flex items-center justify-center p-4 font-cairo bg-background dark:bg-gray-900" dir="rtl">
+             {/* Theme Toggle Absolute */}
+             <button onClick={toggleTheme} className="absolute top-4 left-4 p-2 rounded-full bg-white dark:bg-gray-800 shadow-md text-gray-600 dark:text-yellow-400 transition-colors">
+                {isDarkMode ? <SunIcon className="w-6 h-6"/> : <MoonIcon className="w-6 h-6"/>}
+             </button>
+
+            <div className="glass-card dark:bg-gray-800/90 p-8 sm:p-12 rounded-3xl w-full max-w-md transform transition-all hover:scale-[1.01] border dark:border-gray-700">
                 <div className="text-center mb-8">
                     <div className="w-16 h-16 bg-gradient-to-br from-primary to-orange-600 rounded-full mx-auto mb-4 flex items-center justify-center shadow-lg">
                         <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
                         </svg>
                     </div>
-                    <h1 className="text-3xl font-bold text-gray-800 mb-2">تسجيل الدخول</h1>
-                    <p className="text-gray-600">مرحباً بك في <strong>{bot.name}</strong>. يرجى إدخال بياناتك للمتابعة.</p>
+                    <h1 className="text-3xl font-bold text-gray-800 dark:text-white mb-2">تسجيل الدخول</h1>
+                    <p className="text-gray-600 dark:text-gray-300">مرحباً بك في <strong>{bot.name}</strong>. يرجى إدخال بياناتك للمتابعة.</p>
                 </div>
                 
                 <form onSubmit={handleKeySubmit} className="space-y-5 text-right">
                     <div className="relative">
-                         <label htmlFor="username-input" className="block text-sm font-semibold text-gray-700 mb-2">اسم المستخدم</label>
+                         <label htmlFor="username-input" className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">اسم المستخدم</label>
                         <input 
                             id="username-input"
                             type="text" 
                             placeholder="أدخل اسمك..." 
                             value={username}
                             onChange={(e) => setUsername(e.target.value)}
-                            className="w-full p-4 rounded-xl border-2 border-gray-200 focus:border-primary focus:outline-none transition-colors text-right bg-white/80"
+                            className="w-full p-4 rounded-xl border-2 border-gray-200 dark:border-gray-600 focus:border-primary focus:outline-none transition-colors text-right bg-white/80 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400"
                             required
                         />
                     </div>
                     
                     <div className="relative">
-                         <label htmlFor="api-key-input" className="block text-sm font-semibold text-gray-700 mb-2">مفتاح API</label>
+                         <label htmlFor="api-key-input" className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">مفتاح API</label>
                         <input 
                             id="api-key-input"
                             type="password" 
                             placeholder="أدخل المفتاح هنا..." 
                             value={tempKey}
                             onChange={(e) => setTempKey(e.target.value)}
-                            className="w-full p-4 rounded-xl border-2 border-gray-200 focus:border-primary focus:outline-none transition-colors text-left bg-white/80"
+                            className="w-full p-4 rounded-xl border-2 border-gray-200 dark:border-gray-600 focus:border-primary focus:outline-none transition-colors text-left bg-white/80 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400"
                             dir="ltr"
                             required
                         />
@@ -279,7 +308,7 @@ const ChatPage: React.FC = () => {
                     </button>
                 </form>
                  <div className="mt-6 flex justify-center gap-4 text-sm">
-                    <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noreferrer" className="text-primary hover:text-primary-hover font-semibold bg-orange-50 px-4 py-2 rounded-lg transition-colors">
+                    <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noreferrer" className="text-primary hover:text-primary-hover font-semibold bg-orange-50 dark:bg-gray-700 dark:text-orange-300 px-4 py-2 rounded-lg transition-colors">
                         احصل على مفتاح
                     </a>
                 </div>
@@ -290,9 +319,9 @@ const ChatPage: React.FC = () => {
 
   // 4. Main Chat Interface
   return (
-    <div className="flex flex-col h-[calc(100vh-2rem)] md:h-[calc(100vh-4rem)] max-w-5xl mx-auto glass-card rounded-3xl overflow-hidden font-cairo mt-4 md:mt-8">
+    <div className="flex flex-col h-[calc(100vh-2rem)] md:h-[calc(100vh-4rem)] max-w-5xl mx-auto glass-card rounded-3xl overflow-hidden font-cairo mt-4 md:mt-8 transition-colors duration-300">
       {/* Chat Header */}
-      <div className="p-5 border-b border-gray-200/50 bg-white/40 flex items-center justify-between backdrop-blur-sm z-10" dir="rtl">
+      <div className="p-5 border-b border-gray-200/50 dark:border-gray-700/50 bg-white/40 dark:bg-gray-900/60 flex items-center justify-between backdrop-blur-sm z-10" dir="rtl">
         <div className="flex items-center gap-3">
              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-orange-600 flex items-center justify-center text-white shadow-md">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
@@ -300,37 +329,40 @@ const ChatPage: React.FC = () => {
                 </svg>
              </div>
             <div>
-                <h2 className="text-xl font-bold text-gray-800">{bot.name}</h2>
+                <h2 className="text-xl font-bold text-gray-800 dark:text-white">{bot.name}</h2>
                 <div className="flex items-center gap-2">
-                    <span className="flex items-center text-xs text-green-600 font-semibold">
+                    <span className="flex items-center text-xs text-green-600 dark:text-green-400 font-semibold">
                         <span className="w-2 h-2 bg-green-500 rounded-full mr-1 animate-pulse"></span>
                         متصل الآن
                     </span>
-                    <span className="text-xs text-gray-500">| {username}</span>
+                    <span className="text-xs text-gray-500 dark:text-gray-400">| {username}</span>
                 </div>
             </div>
         </div>
-        <div>
-            <button onClick={handleLogout} className="text-sm font-semibold text-red-500 hover:text-red-700 bg-red-50/80 hover:bg-red-100 px-4 py-2 rounded-xl transition-colors border border-red-100">
+        <div className="flex items-center gap-2">
+            <button onClick={toggleTheme} className="p-2 rounded-xl bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-yellow-400 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors">
+                {isDarkMode ? <SunIcon className="w-5 h-5"/> : <MoonIcon className="w-5 h-5"/>}
+            </button>
+            <button onClick={handleLogout} className="text-sm font-semibold text-red-500 hover:text-red-700 bg-red-50/80 dark:bg-red-900/30 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/50 px-4 py-2 rounded-xl transition-colors border border-red-100 dark:border-red-900/30">
                 خروج
             </button>
         </div>
       </div>
 
       {/* Messages Area */}
-      <div className="flex-grow p-4 md:p-6 overflow-y-auto bg-gray-50/30 scroll-smooth">
+      <div className="flex-grow p-4 md:p-6 overflow-y-auto bg-gray-50/30 dark:bg-gray-900/50 scroll-smooth">
         {messages.map(msg => (
           <ChatMessageBubble key={msg.id} message={msg} />
         ))}
         {isSending && (
           <div className="flex justify-start animate-slide-in mb-4">
-             <div className="px-5 py-4 rounded-2xl bg-white/90 text-gray-500 rounded-br-none border border-gray-100 flex items-center shadow-sm gap-3">
+             <div className="px-5 py-4 rounded-2xl bg-white/90 dark:bg-gray-800/90 text-gray-500 dark:text-gray-400 rounded-br-none border border-gray-100 dark:border-gray-700 flex items-center shadow-sm gap-3">
                 <div className="flex space-x-1">
                     <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '0s' }}></div>
                     <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
                     <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '0.4s' }}></div>
                 </div>
-                <span className="text-sm font-medium text-gray-400">جاري المعالجة...</span>
+                <span className="text-sm font-medium">جاري المعالجة...</span>
              </div>
           </div>
         )}
@@ -338,14 +370,14 @@ const ChatPage: React.FC = () => {
       </div>
 
       {/* Input Area */}
-      <div className="p-4 border-t border-gray-200/50 bg-white/60 backdrop-blur-md" dir="rtl">
+      <div className="p-4 border-t border-gray-200/50 dark:border-gray-700/50 bg-white/60 dark:bg-gray-900/80 backdrop-blur-md" dir="rtl">
         <form onSubmit={handleSendMessage} className="flex items-center gap-3">
           <input
             type="text"
             value={input}
             onChange={(e) => setInput(e.target.value)}
             placeholder="اسأل عن محتوى الملف..."
-            className="flex-grow bg-white border-2 border-gray-200 focus:border-primary rounded-2xl py-3 px-6 text-gray-800 text-lg focus:outline-none transition-all shadow-sm"
+            className="flex-grow bg-white dark:bg-gray-700 border-2 border-gray-200 dark:border-gray-600 focus:border-primary dark:focus:border-primary rounded-2xl py-3 px-6 text-gray-800 dark:text-white placeholder-gray-400 dark:placeholder-gray-400 text-lg focus:outline-none transition-all shadow-sm"
           />
           <button
             type="submit"
