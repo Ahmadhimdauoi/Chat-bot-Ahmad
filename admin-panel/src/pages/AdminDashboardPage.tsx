@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { createBot, listBots, uploadFile, deleteBot } from '../services/adminApiService';
+import { createBot, listBots, uploadFile, deleteBot, deleteDocument } from '../services/adminApiService';
 import Spinner from '../components/Spinner';
 import ClipboardIcon from '../components/icons/ClipboardIcon';
 import PlusIcon from '../components/icons/PlusIcon';
@@ -90,9 +90,10 @@ const CreateBotForm: React.FC<{ onBotCreated: (bot: Bot) => void }> = ({ onBotCr
   );
 };
 
-const BotCard: React.FC<{ bot: Bot, onFileUploaded: (botId: string) => void, onDelete: (botId: string) => void }> = ({ bot, onFileUploaded, onDelete }) => {
+const BotCard: React.FC<{ bot: Bot, onUpdate: () => void, onDelete: (botId: string) => void }> = ({ bot, onUpdate, onDelete }) => {
     const [isUploading, setIsUploading] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
+    const [deletingDocId, setDeletingDocId] = useState<string | null>(null);
     const [uploadError, setUploadError] = useState('');
     const [uploadSuccess, setUploadSuccess] = useState('');
     const [copySuccess, setCopySuccess] = useState('');
@@ -119,8 +120,8 @@ const BotCard: React.FC<{ bot: Bot, onFileUploaded: (botId: string) => void, onD
             
             try {
                 await uploadFile(bot._id, file);
-                setUploadSuccess('PDF processed & added to KB!');
-                onFileUploaded(bot._id); // Refresh list
+                setUploadSuccess('File analyzed & added successfully!');
+                onUpdate(); // Refresh list
                 if (fileInputRef.current) fileInputRef.current.value = '';
             } catch (err: any) {
                 setUploadError(err.message);
@@ -130,7 +131,7 @@ const BotCard: React.FC<{ bot: Bot, onFileUploaded: (botId: string) => void, onD
         }
     };
 
-    const handleDelete = async () => {
+    const handleDeleteBot = async () => {
         if (window.confirm(`Are you sure you want to delete "${bot.name}"? This will delete all uploaded files associated with it.`)) {
             setIsDeleting(true);
             try {
@@ -139,6 +140,20 @@ const BotCard: React.FC<{ bot: Bot, onFileUploaded: (botId: string) => void, onD
             } catch (err: any) {
                 alert("Failed to delete bot: " + err.message);
                 setIsDeleting(false);
+            }
+        }
+    };
+
+    const handleDeleteDoc = async (docId: string, docName: string) => {
+        if (window.confirm(`Delete file "${docName}"? This will remove it from the bot's knowledge.`)) {
+            setDeletingDocId(docId);
+            try {
+                await deleteDocument(docId);
+                onUpdate();
+            } catch (err: any) {
+                alert("Failed to delete document: " + err.message);
+            } finally {
+                setDeletingDocId(null);
             }
         }
     };
@@ -158,7 +173,7 @@ const BotCard: React.FC<{ bot: Bot, onFileUploaded: (botId: string) => void, onD
                         Open Chat
                     </button>
                     <button
-                        onClick={handleDelete}
+                        onClick={handleDeleteBot}
                         disabled={isDeleting}
                         className="p-2 text-red-400 bg-red-400/10 rounded-md hover:bg-red-400/20 transition-colors"
                         title="Delete Bot"
@@ -178,31 +193,62 @@ const BotCard: React.FC<{ bot: Bot, onFileUploaded: (botId: string) => void, onD
                 </div>
             </div>
 
-            <div className="border-t border-gray-700 pt-4 flex-grow">
-                <h4 className="font-semibold text-gray-300 mb-2 text-sm">Knowledge Base (Files)</h4>
+            <div className="border-t border-gray-700 pt-4 flex-grow flex flex-col">
+                <div className="flex justify-between items-center mb-2">
+                    <h4 className="font-semibold text-gray-300 text-sm">Knowledge Base (Files)</h4>
+                </div>
                 
                 {/* List of Uploaded Files */}
-                <div className="mb-4 space-y-2">
+                <div className="mb-4 space-y-2 flex-grow overflow-y-auto max-h-40 pr-1">
                     {bot.documents && bot.documents.length > 0 ? (
-                        <ul className="space-y-1">
+                        <ul className="space-y-2">
                             {bot.documents.map((doc) => (
-                                <li key={doc._id} className="flex items-center text-xs text-gray-400 bg-gray-900/50 p-2 rounded border border-gray-700/50">
-                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-3 h-3 mr-2 text-primary">
-                                      <path fillRule="evenodd" d="M4.5 2A1.5 1.5 0 003 3.5v13A1.5 1.5 0 004.5 18h11a1.5 1.5 0 001.5-1.5V7.621a1.5 1.5 0 00-.44-1.06l-4.12-4.122A1.5 1.5 0 0011.378 2H4.5zm2.25 8.5a.75.75 0 000 1.5h6.5a.75.75 0 000-1.5h-6.5zm0 3a.75.75 0 000 1.5h6.5a.75.75 0 000-1.5h-6.5z" clipRule="evenodd" />
-                                    </svg>
-                                    <span className="truncate">{doc.file_name}</span>
+                                <li key={doc._id} className="flex items-center justify-between text-xs text-gray-300 bg-gray-900/50 p-2.5 rounded border border-gray-700/50 group">
+                                    <div className="flex items-center flex-grow min-w-0 mr-2">
+                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4 mr-2 text-primary flex-shrink-0">
+                                          <path fillRule="evenodd" d="M4.5 2A1.5 1.5 0 003 3.5v13A1.5 1.5 0 004.5 18h11a1.5 1.5 0 001.5-1.5V7.621a1.5 1.5 0 00-.44-1.06l-4.12-4.122A1.5 1.5 0 0011.378 2H4.5zm2.25 8.5a.75.75 0 000 1.5h6.5a.75.75 0 000-1.5h-6.5zm0 3a.75.75 0 000 1.5h6.5a.75.75 0 000-1.5h-6.5z" clipRule="evenodd" />
+                                        </svg>
+                                        <span className="truncate font-medium">{doc.file_name}</span>
+                                    </div>
+                                    <div className="flex items-center space-x-2">
+                                        <span className="hidden group-hover:inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-green-900/30 text-green-400 border border-green-900/50">
+                                           ✅ Analyzed
+                                        </span>
+                                        <button 
+                                            onClick={() => handleDeleteDoc(doc._id, doc.file_name)}
+                                            disabled={deletingDocId === doc._id}
+                                            className="text-gray-500 hover:text-red-400 transition-colors p-1 rounded hover:bg-gray-800"
+                                            title="Delete File"
+                                        >
+                                            {deletingDocId === doc._id ? <Spinner className="w-3 h-3"/> : <TrashIcon className="w-4 h-4"/>}
+                                        </button>
+                                    </div>
                                 </li>
                             ))}
                         </ul>
                     ) : (
-                        <p className="text-xs text-gray-500 italic">No files uploaded yet.</p>
+                        <div className="flex flex-col items-center justify-center h-20 border-2 border-dashed border-gray-700 rounded-md">
+                            <p className="text-xs text-gray-500 italic">No files uploaded yet.</p>
+                        </div>
                     )}
                 </div>
 
-                <div className="flex items-center space-x-2">
-                    <label className="flex-grow cursor-pointer bg-gray-900 border border-gray-700 rounded-md p-2 text-gray-400 text-sm hover:border-primary flex justify-between items-center">
-                        <span>Upload PDF</span>
-                        <UploadIcon className="w-4 h-4"/>
+                <div className="mt-auto">
+                     {uploadError && <p className="text-red-500 text-xs mb-2 text-center">{uploadError}</p>}
+                     {uploadSuccess && <p className="text-green-500 text-xs mb-2 text-center">{uploadSuccess}</p>}
+                    
+                    <label className={`flex items-center justify-center w-full cursor-pointer bg-gray-700/50 border border-gray-600 rounded-md p-2 text-gray-300 text-sm hover:bg-gray-700 hover:border-primary transition-all ${isUploading ? 'opacity-50 cursor-wait' : ''}`}>
+                        {isUploading ? (
+                            <div className="flex items-center">
+                                <Spinner className="w-4 h-4 mr-2 text-primary"/>
+                                <span>Analyzing Document...</span>
+                            </div>
+                        ) : (
+                            <div className="flex items-center">
+                                <UploadIcon className="w-4 h-4 mr-2"/>
+                                <span>Upload & Analyze PDF</span>
+                            </div>
+                        )}
                         <input 
                           type="file" 
                           accept="application/pdf" 
@@ -212,10 +258,8 @@ const BotCard: React.FC<{ bot: Bot, onFileUploaded: (botId: string) => void, onD
                           disabled={isUploading}
                         />
                     </label>
-                    {isUploading && <Spinner className="w-5 h-5 text-primary"/>}
+                    <p className="text-[10px] text-gray-500 text-center mt-1">File is automatically processed for faster answers.</p>
                 </div>
-                 {uploadError && <p className="text-red-500 text-xs mt-2">{uploadError}</p>}
-                 {uploadSuccess && <p className="text-green-500 text-xs mt-2">{uploadSuccess}</p>}
             </div>
         </div>
     );
@@ -253,7 +297,7 @@ const AdminDashboardPage: React.FC = () => {
   };
 
   // Trigger a refresh when a file is uploaded to show the new filename immediately
-  const handleFileUploaded = () => {
+  const handleBotUpdated = () => {
     fetchBots(); 
   };
 
@@ -272,7 +316,7 @@ const AdminDashboardPage: React.FC = () => {
                 <BotCard 
                     key={bot._id} 
                     bot={bot} 
-                    onFileUploaded={handleFileUploaded}
+                    onUpdate={handleBotUpdated}
                     onDelete={handleBotDeleted}
                 />
                ))}

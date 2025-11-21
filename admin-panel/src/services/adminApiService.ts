@@ -34,6 +34,13 @@ export const deleteBot = async (botId: string) => {
   return handleResponse(response);
 };
 
+export const deleteDocument = async (docId: string) => {
+    const response = await fetch(`${API_BASE_URL}/bots/docs/${docId}`, {
+        method: 'DELETE',
+    });
+    return handleResponse(response);
+};
+
 export const uploadFile = async (botId: string, file: File) => {
   const formData = new FormData();
   formData.append('file', file);

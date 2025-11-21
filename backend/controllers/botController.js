@@ -85,7 +85,11 @@ export const deleteBot = async (req, res) => {
         if (doc.file_path) {
             const fullPath = path.join(__dirname, '..', doc.file_path);
             if (fs.existsSync(fullPath)) {
-                fs.unlinkSync(fullPath);
+                try {
+                    fs.unlinkSync(fullPath);
+                } catch (e) {
+                    console.error("Error deleting file:", e);
+                }
             }
         }
     });
@@ -103,7 +107,39 @@ export const deleteBot = async (req, res) => {
   }
 };
 
-// Upload Document and Save File locally
+// Delete Single Document
+export const deleteDocument = async (req, res) => {
+    try {
+        const { docId } = req.params;
+        
+        const doc = await Document.findById(docId);
+        if (!doc) {
+            return res.status(404).json({ error: "Document not found" });
+        }
+
+        // 1. Delete physical file
+        if (doc.file_path) {
+            const fullPath = path.join(__dirname, '..', doc.file_path);
+            if (fs.existsSync(fullPath)) {
+                try {
+                    fs.unlinkSync(fullPath);
+                } catch (e) {
+                     console.error("Error deleting physical file:", e);
+                }
+            }
+        }
+
+        // 2. Delete from DB
+        await Document.findByIdAndDelete(docId);
+
+        res.json({ message: "Document deleted successfully", docId });
+    } catch (error) {
+        console.error("Delete Document error:", error);
+        res.status(500).json({ error: error.message });
+    }
+};
+
+// Upload Document and Analyze
 export const uploadDocument = async (req, res) => {
   try {
     const { botId } = req.body;
@@ -119,15 +155,22 @@ export const uploadDocument = async (req, res) => {
 
     // 1. Extract text from PDF buffer (for RAG)
     const data = await pdf(req.file.buffer);
-    const textContent = data.text;
+    let rawText = data.text;
 
-    // 2. Prepare Upload Directory
+    // 2. OPTIMIZE: Analysis & Cleaning Step
+    // Reduce token usage and noise to make chat faster
+    const cleanedText = rawText
+        .replace(/\n\s*\n/g, '\n') // Remove multiple empty lines
+        .replace(/\s+/g, ' ')       // Collapse multiple spaces
+        .trim();
+
+    // 3. Prepare Upload Directory
     const uploadDir = path.join(__dirname, '../uploads');
     if (!fs.existsSync(uploadDir)) {
       fs.mkdirSync(uploadDir, { recursive: true });
     }
 
-    // 3. Generate safe filename and save to disk
+    // 4. Generate safe filename and save to disk
     const timestamp = Date.now();
     const safeFilename = req.file.originalname.replace(/\s+/g, '_');
     const filename = `${timestamp}-${safeFilename}`;
@@ -135,12 +178,12 @@ export const uploadDocument = async (req, res) => {
 
     fs.writeFileSync(filePath, req.file.buffer);
 
-    // 4. Save metadata to Document Table
+    // 5. Save metadata to Document Table
     const docEntry = new Document({
       chatbot_id: botId,
       file_name: req.file.originalname,
       file_path: `/uploads/${filename}`, // Web-accessible path
-      extracted_content: textContent,
+      extracted_content: cleanedText, // Saved the OPTIMIZED text
       file_type: 'pdf'
     });
     
