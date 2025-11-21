@@ -1,4 +1,4 @@
-import Chatbot from '../models/Chatbot.js';
+
 import Document from '../models/Document.js';
 import Admin from '../models/Admin.js';
 import pdf from 'pdf-parse';
@@ -10,19 +10,22 @@ const getDefaultAdminId = async () => {
 };
 
 // Get all bots
+// Since 'Chatbot' table is deleted, we fetch active bot IDs from Documents
 export const getAllBots = async (req, res) => {
   try {
-    const bots = await Chatbot.find().sort({ created_at: -1 });
+    // Find all unique chatbot_ids from the Document collection
+    const uniqueBotIds = await Document.distinct('chatbot_id');
     
-    const mappedBots = bots.map(bot => ({
-      _id: bot._id,
-      name: bot.name,
-      welcomeMessage: bot.welcome_message,
-      systemInstruction: bot.prompt_instruction,
-      createdAt: bot.created_at
+    // Map them to mock Bot objects so the frontend can display them
+    const bots = uniqueBotIds.map(id => ({
+      _id: id,
+      name: `Knowledge Base (${id.substr(-4)})`, // Generate a generic name or use ID
+      welcomeMessage: "Hello! How can I help you with the uploaded documents?",
+      systemInstruction: "You are a helpful assistant.",
+      createdAt: new Date()
     }));
 
-    res.json(mappedBots);
+    res.json(bots);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -31,15 +34,14 @@ export const getAllBots = async (req, res) => {
 // Get single bot
 export const getBotById = async (req, res) => {
   try {
-    const bot = await Chatbot.findById(req.params.id);
-    if (!bot) return res.status(404).json({ error: "Bot not found" });
-    
+    const { id } = req.params;
+    // Return a generic bot object since we don't store metadata anymore
     res.json({
-      _id: bot._id,
-      name: bot.name,
-      welcomeMessage: bot.welcome_message,
-      systemInstruction: bot.prompt_instruction,
-      createdAt: bot.created_at
+      _id: id,
+      name: "Knowledge Assistant",
+      welcomeMessage: "Hello! Ask me anything about the context.",
+      systemInstruction: "You are a helpful assistant.",
+      createdAt: new Date()
     });
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -47,32 +49,18 @@ export const getBotById = async (req, res) => {
 };
 
 // Create new bot
+// Since we don't have a table, we just return a valid object to the frontend.
+// The bot "persists" only when a document is uploaded with this ID.
 export const createBot = async (req, res) => {
   try {
     const { name, welcomeMessage, systemInstruction } = req.body;
-    let adminId = await getDefaultAdminId();
-    
-    if (!adminId) {
-        // Create default admin if not exists (failsafe)
-        const newAdmin = new Admin({ username: 'admin', password: 'password', email: 'admin@test.com' });
-        await newAdmin.save();
-        adminId = newAdmin._id;
-    }
+    const newId = Date.now().toString(); // Simple ID generation
 
-    const newBot = new Chatbot({ 
-      admin_id: adminId,
-      name, 
-      welcome_message: welcomeMessage, 
-      prompt_instruction: systemInstruction 
-    });
-    
-    await newBot.save();
-    
     res.status(201).json({
-      _id: newBot._id,
-      name: newBot.name,
-      welcomeMessage: newBot.welcome_message,
-      createdAt: newBot.created_at
+      _id: newId,
+      name: name, // Frontend will see the name immediately
+      welcomeMessage: welcomeMessage,
+      createdAt: new Date()
     });
   } catch (error) {
     res.status(500).json({ error: error.message });
