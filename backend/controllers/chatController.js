@@ -1,10 +1,33 @@
 import Chatbot from '../models/Chatbot.js';
 import Document from '../models/Document.js';
+import User from '../models/User.js';
 import { GoogleGenAI } from '@google/genai';
 
 // Fetch Chat History - Disabled (Returns empty array)
 export const getChatHistory = async (req, res) => {
   res.json([]);
+};
+
+// Register or Update User
+export const registerUser = async (req, res) => {
+  try {
+    const { username, apiKey } = req.body;
+    if (!username || !apiKey) {
+      return res.status(400).json({ error: "Username and API Key are required" });
+    }
+
+    // Find and update user, or create new one if doesn't exist
+    const user = await User.findOneAndUpdate(
+      { username },
+      { private_key: apiKey },
+      { new: true, upsert: true }
+    );
+
+    res.status(200).json({ message: "User registered", userId: user._id });
+  } catch (error) {
+    console.error("Register User Error:", error);
+    res.status(500).json({ error: "Failed to save user data" });
+  }
 };
 
 export const handleChat = async (req, res) => {

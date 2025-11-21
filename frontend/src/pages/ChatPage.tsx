@@ -3,7 +3,7 @@ import { useParams } from 'react-router-dom';
 import ReactMarkdown from 'react-markdown';
 import remarkMath from 'remark-math';
 import rehypeKatex from 'rehype-katex';
-import { sendChatMessage, getBot, fetchChatHistory } from '../services/apiService';
+import { sendChatMessage, getBot, fetchChatHistory, registerUser } from '../services/apiService';
 import Spinner from '../components/Spinner';
 import PaperAirplaneIcon from '../components/icons/PaperAirplaneIcon';
 import 'katex/dist/katex.min.css';
@@ -61,16 +61,20 @@ const ChatPage: React.FC = () => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // Auth State
+  const [username, setUsername] = useState('');
   const [userApiKey, setUserApiKey] = useState('');
   const [hasAccess, setHasAccess] = useState(false);
   const [tempKey, setTempKey] = useState('');
+  const [isRegistering, setIsRegistering] = useState(false);
 
   // Check for existing key on mount
   useEffect(() => {
     const storedKey = localStorage.getItem('gemini_api_key');
-    if (storedKey) {
+    const storedUser = localStorage.getItem('chat_username');
+    if (storedKey && storedUser) {
       setUserApiKey(storedKey);
       setTempKey(storedKey);
+      setUsername(storedUser);
       setHasAccess(true);
     }
   }, []);
@@ -124,15 +128,31 @@ const ChatPage: React.FC = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  const handleKeySubmit = (e: React.FormEvent) => {
+  const handleKeySubmit = async (e: React.FormEvent) => {
       e.preventDefault();
-      if (tempKey.trim().length > 10) {
+      if (!username.trim()) {
+          alert("يرجى إدخال اسم المستخدم");
+          return;
+      }
+      if (tempKey.trim().length < 10) {
+          alert("يرجى إدخال مفتاح API صالح");
+          return;
+      }
+
+      setIsRegistering(true);
+      try {
+          // Register User in Backend
+          await registerUser(username.trim(), tempKey.trim());
+
           const cleanKey = tempKey.trim();
           setUserApiKey(cleanKey);
           setHasAccess(true);
           localStorage.setItem('gemini_api_key', cleanKey);
-      } else {
-          alert("يرجى إدخال مفتاح API صالح");
+          localStorage.setItem('chat_username', username.trim());
+      } catch (err: any) {
+          alert("فشل تسجيل الدخول: " + err.message);
+      } finally {
+          setIsRegistering(false);
       }
   };
 
@@ -140,8 +160,10 @@ const ChatPage: React.FC = () => {
     setHasAccess(false);
     setUserApiKey('');
     setTempKey('');
+    setUsername('');
     setMessages([]);
     localStorage.removeItem('gemini_api_key');
+    localStorage.removeItem('chat_username');
   };
 
   const handleSendMessage = async (e: React.FormEvent) => {
@@ -206,11 +228,24 @@ const ChatPage: React.FC = () => {
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
                         </svg>
                     </div>
-                    <h1 className="text-3xl font-bold text-gray-800 mb-2">مفتاح Gemini API</h1>
-                    <p className="text-gray-600">للبدء في المحادثة مع <strong>{bot.name}</strong>، يرجى إدخال مفتاح API.</p>
+                    <h1 className="text-3xl font-bold text-gray-800 mb-2">تسجيل الدخول</h1>
+                    <p className="text-gray-600">مرحباً بك في <strong>{bot.name}</strong>. يرجى إدخال بياناتك للمتابعة.</p>
                 </div>
                 
-                <form onSubmit={handleKeySubmit} className="space-y-6 text-right">
+                <form onSubmit={handleKeySubmit} className="space-y-5 text-right">
+                    <div className="relative">
+                         <label htmlFor="username-input" className="block text-sm font-semibold text-gray-700 mb-2">اسم المستخدم</label>
+                        <input 
+                            id="username-input"
+                            type="text" 
+                            placeholder="أدخل اسمك..." 
+                            value={username}
+                            onChange={(e) => setUsername(e.target.value)}
+                            className="w-full p-4 rounded-xl border-2 border-gray-200 focus:border-yellow-500 focus:outline-none transition-colors text-right bg-white/80"
+                            required
+                        />
+                    </div>
+                    
                     <div className="relative">
                          <label htmlFor="api-key-input" className="block text-sm font-semibold text-gray-700 mb-2">مفتاح API</label>
                         <input 
@@ -220,18 +255,26 @@ const ChatPage: React.FC = () => {
                             value={tempKey}
                             onChange={(e) => setTempKey(e.target.value)}
                             className="w-full p-4 rounded-xl border-2 border-gray-200 focus:border-yellow-500 focus:outline-none transition-colors text-left bg-white/80"
+                            dir="ltr"
                             required
                         />
                     </div>
 
                     <button 
-                        type="submit" 
-                        className="w-full bg-gradient-to-r from-yellow-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white font-bold rounded-xl text-lg px-6 py-4 transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-1 flex items-center justify-center gap-2"
+                        type="submit"
+                        disabled={isRegistering}
+                        className="w-full bg-gradient-to-r from-yellow-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white font-bold rounded-xl text-lg px-6 py-4 transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-1 flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
                     >
-                       <span>تسجيل الدخول</span>
-                       <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 transform rotate-180" viewBox="0 0 20 20" fill="currentColor">
-                            <path fillRule="evenodd" d="M3 3a1 1 0 011 1v12a1 1 0 11-2 0V4a1 1 0 011-1zm7.707 3.293a1 1 0 010 1.414L9.414 9H17a1 1 0 110 2H9.414l1.293 1.293a1 1 0 01-1.414 1.414l-3-3a1 1 0 010-1.414l3-3a1 1 0 011.414 0z" clipRule="evenodd" />
-                        </svg>
+                       {isRegistering ? (
+                           <Spinner className="w-6 h-6" />
+                       ) : (
+                           <>
+                               <span>دخول</span>
+                               <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 transform rotate-180" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fillRule="evenodd" d="M3 3a1 1 0 011 1v12a1 1 0 11-2 0V4a1 1 0 011-1zm7.707 3.293a1 1 0 010 1.414L9.414 9H17a1 1 0 110 2H9.414l1.293 1.293a1 1 0 01-1.414 1.414l-3-3a1 1 0 010-1.414l3-3a1 1 0 011.414 0z" clipRule="evenodd" />
+                                </svg>
+                           </>
+                       )}
                     </button>
                 </form>
                  <div className="mt-6 flex justify-center gap-4 text-sm">
@@ -257,10 +300,13 @@ const ChatPage: React.FC = () => {
              </div>
             <div>
                 <h2 className="text-xl font-bold text-gray-800">{bot.name}</h2>
-                <span className="flex items-center text-xs text-green-600 font-semibold">
-                    <span className="w-2 h-2 bg-green-500 rounded-full mr-1 animate-pulse"></span>
-                    متصل الآن
-                </span>
+                <div className="flex items-center gap-2">
+                    <span className="flex items-center text-xs text-green-600 font-semibold">
+                        <span className="w-2 h-2 bg-green-500 rounded-full mr-1 animate-pulse"></span>
+                        متصل الآن
+                    </span>
+                    <span className="text-xs text-gray-500">| {username}</span>
+                </div>
             </div>
         </div>
         <div>
