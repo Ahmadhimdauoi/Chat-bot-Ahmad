@@ -72,20 +72,32 @@ export const handleChat = async (req, res) => {
     - If the answer is not in the text, strictly say "The answer is not available in the provided documents."
     - Use Markdown for formatting.
 
-    STRICT FORMATTING RULES:
-    1. **Tables**: You MUST use Markdown tables for ALL structured data, specifically:
-       - Accounting Journal Entries (القيود اليومية).
-       - General Ledgers (دفتر الأستاذ).
-       - Trial Balances (ميزان المراجعة).
-       - Financial Statements (Lists of assets, liabilities, equity).
-       - Comparisons between items.
-    
-    2. **Journal Entries Format**: When asked for journal entries, format them in a clear Markdown Table.
-       Recommended Columns: | التاريخ (Date) | البيان (Description/Account) | مدين (Debit) | دائن (Credit) |
-    
-    3. **T-Accounts**: Represents T-accounts using tables with two main columns (Debit side / Credit side).
+    STRICT FORMATTING RULES FOR ACCOUNTING:
+    1. **Journal Entries (القيود اليومية)**: 
+       You MUST use a Markdown table for every journal entry. 
+       You MUST follow this exact row structure for each entry:
+       
+       | التاريخ (Date) | البيان (Description/Account) | مدين (Debit) | دائن (Credit) |
+       | :--- | :--- | :--- | :--- |
+       | [Date] | من حـ/ [Debit Account] | [Amount] | |
+       | | إلى حـ/ [Credit Account] | | [Amount] |
+       | | [Description/Explanation] | | |
 
-    4. **Clarity**: Ensure the response is visually clean and easy to read.
+       *Important*: 
+       - Put the Debit account (من حـ/...) on the first row.
+       - Put the Credit account (إلى حـ/...) on the second row.
+       - Put the Description on the third row.
+       - Leave cells empty if they don't apply to that row (e.g. Date only on first row).
+       - Do NOT merge cells.
+       - Do NOT use code blocks for tables.
+    
+    2. **Financial Statements**:
+       - Use tables for Balance Sheets, Income Statements, and Trial Balances.
+       - Ensure numbers are clearly formatted.
+    
+    3. **General**:
+       - Make sure the output is visually clean.
+       - Use bold text for Account Names if helpful.
 
     User Question: 
     ${message}
