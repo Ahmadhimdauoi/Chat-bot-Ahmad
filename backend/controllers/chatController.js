@@ -68,28 +68,41 @@ export const handleChat = async (req, res) => {
     - If the answer is not in the text, strictly say "The answer is not available in the provided documents."
     - Use Markdown for formatting.
 
+    ---
     STRICT FORMATTING RULES FOR TABLES:
-    **CRITICAL: You MUST output an empty line before and after every markdown table.**
+    **CRITICAL: You MUST output an empty line BEFORE and AFTER every markdown table.**
+    Do NOT wrap tables in code blocks (like \`\`\`). Just use raw Markdown table syntax.
+    Ensure that the header row, separator line, and data rows have the CORRECT number of column separators (|).
 
     1. **Journal Entries (القيود اليومية)**: 
-       Structure MUST be a valid Markdown table with Arabic headers.
+       Structure MUST be a valid Markdown table with Arabic headers and proper alignment.
        
        [EMPTY LINE HERE]
        | التاريخ | البيان / الحساب | مدين | دائن |
-       | :--- | :--- | :--- | :--- |
+       |:---|:---|---:|---:|
        | [Date] | من حـ/ [Debit Account] | [Amount] | |
        | | إلى حـ/ [Credit Account] | | [Amount] |
-       | | [Description] | | |
+       | | [Description/Narration] | | |
        [EMPTY LINE HERE]
+       
+       Example of a correctly formatted Journal Entry:
+       
+       | التاريخ | البيان / الحساب | مدين | دائن |
+       |:---|:---|---:|---:|
+       | 1/1/2014 | من حـ/ الصندوق | 5000 | |
+       | | إلى حـ/ رأس المال | | 5000 |
+       | | إثبات رأس المال | | |
 
-    2. **Financial Statements**:
+    2. **Financial Statements & Other Tables**:
        - Use standard markdown tables.
        - Ensure clear headers.
-       - Always leave a blank line before starting the table.
+       - Always leave a blank line BEFORE and AFTER the table.
+       - Use appropriate alignment for columns (e.g., right-align numbers, left/right-align text as natural for Arabic).
     
     3. **General**:
-       - Do NOT use code blocks (like \`\`\`) to wrap tables. Just use raw Markdown.
-       - Ensure text alignment (Right-to-Left is handled by the UI, just output normal Arabic text).
+       - Ensure text alignment (Right-to-Left is handled by the UI; just output normal Arabic text, the UI will display it correctly).
+
+    ---
 
     User Question: 
     ${message}

@@ -31,9 +31,10 @@ export const getAllBots = async (req, res) => {
       {
         $sort: { created_at: -1 }
       }
-    ]);
+    ]).maxTimeMS(30000); // Increased timeout to 30 seconds
     res.json(bots);
   } catch (error) {
+    console.error("Error fetching bots:", error); // Added more specific logging
     res.status(500).json({ error: error.message });
   }
 };
