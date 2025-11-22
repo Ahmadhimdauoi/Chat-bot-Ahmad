@@ -49,7 +49,7 @@ const ChatMessageBubble: React.FC<{ message: ChatMessage }> = ({ message }) => {
         {isAssistant ? (
           <div className="markdown-content" dir="auto">
             <ReactMarkdown
-              remarkPlugins={[remarkGfm, remarkMath]}
+              remarkPlugins={[remarkMath, remarkGfm]}
               rehypePlugins={[rehypeKatex]}
               components={{
                 h1: ({node, ...props}) => <h1 className="text-2xl font-bold text-primary mt-6 mb-3 pb-2 border-b border-gray-100 dark:border-gray-700" {...props} />,
@@ -78,7 +78,7 @@ const ChatMessageBubble: React.FC<{ message: ChatMessage }> = ({ message }) => {
                     </code>
                     )
                 },
-                // UPDATED TABLE STYLES FOR BETTER ACCOUNTING LAYOUT
+                // STYLE FOR TABLES
                 table: ({node, ...props}) => (
                   <div className="overflow-x-auto my-6 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800/50 shadow-md">
                     <table className="min-w-full divide-y divide-gray-300 dark:divide-gray-700 border-collapse" {...props} />
@@ -87,7 +87,7 @@ const ChatMessageBubble: React.FC<{ message: ChatMessage }> = ({ message }) => {
                 thead: ({node, ...props}) => <thead className="bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white" {...props} />,
                 tbody: ({node, ...props}) => <tbody className="bg-white dark:bg-gray-900/80 divide-y divide-gray-200 dark:divide-gray-700" {...props} />,
                 tr: ({node, ...props}) => <tr className="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors" {...props} />,
-                th: ({node, ...props}) => <th className="px-4 py-3 text-right text-sm font-bold uppercase tracking-wider border-l border-gray-300 dark:border-gray-700 last:border-l-0 whitespace-nowrap" {...props} />,
+                th: ({node, ...props}) => <th className="px-4 py-3 text-right text-sm font-bold uppercase tracking-wider border-l border-gray-300 dark:border-gray-700 last:border-l-0 whitespace-nowrap bg-gray-200/50 dark:bg-gray-700/50" {...props} />,
                 td: ({node, ...props}) => <td className="px-4 py-3 text-sm text-gray-800 dark:text-gray-200 whitespace-normal break-words border-l border-gray-200 dark:border-gray-700 last:border-l-0 align-top" {...props} />,
                 strong: ({node, ...props}) => <strong className="font-bold text-gray-900 dark:text-white" {...props} />,
                 hr: ({node, ...props}) => <hr className="my-6 border-gray-200 dark:border-gray-700" {...props} />,
@@ -333,37 +333,34 @@ const ChatPage: React.FC = () => {
                         <input 
                             id="api-key-input"
                             type="password" 
-                            placeholder="أدخل المفتاح هنا..." 
+                            placeholder="أدخل Gemini API Key..." 
                             value={tempKey}
                             onChange={(e) => setTempKey(e.target.value)}
-                            className="w-full p-4 rounded-xl border-2 border-gray-200 dark:border-gray-600 focus:border-primary focus:outline-none transition-colors text-left bg-white dark:bg-gray-700 dark:text-white dark:placeholder-gray-400"
-                            dir="ltr"
+                            className="w-full p-4 rounded-xl border-2 border-gray-200 dark:border-gray-600 focus:border-primary focus:outline-none transition-colors text-right bg-white dark:bg-gray-700 dark:text-white dark:placeholder-gray-400"
                             required
                         />
+                         <div className="mt-2 flex justify-between text-xs">
+                            <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noreferrer" className="text-primary hover:text-orange-600 underline">
+                                احصل على المفتاح من هنا
+                            </a>
+                         </div>
                     </div>
 
                     <button 
-                        type="submit"
+                        type="submit" 
                         disabled={isRegistering}
-                        className="w-full bg-gradient-to-r from-primary to-orange-600 hover:from-primary-hover hover:to-orange-700 text-white font-bold rounded-xl text-lg px-6 py-4 transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-1 flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
+                        className="w-full py-4 bg-gradient-to-r from-primary to-orange-600 text-white font-bold rounded-xl shadow-lg hover:shadow-orange-500/30 transform hover:-translate-y-0.5 transition-all duration-200 flex items-center justify-center"
                     >
-                       {isRegistering ? (
-                           <Spinner className="w-6 h-6" />
-                       ) : (
+                       {isRegistering ? <Spinner className="w-6 h-6 text-white" /> : (
                            <>
-                               <span>دخول</span>
-                               <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 transform rotate-180" viewBox="0 0 20 20" fill="currentColor">
-                                    <path fillRule="evenodd" d="M3 3a1 1 0 011 1v12a1 1 0 11-2 0V4a1 1 0 011-1zm7.707 3.293a1 1 0 010 1.414L9.414 9H17a1 1 0 110 2H9.414l1.293 1.293a1 1 0 01-1.414 1.414l-3-3a1 1 0 010-1.414l3-3a1 1 0 011.414 0z" clipRule="evenodd" />
-                                </svg>
+                            <span>بدء المحادثة</span>
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 rotate-180" viewBox="0 0 20 20" fill="currentColor">
+                                <path fillRule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clipRule="evenodd" />
+                            </svg>
                            </>
                        )}
                     </button>
                 </form>
-                 <div className="mt-6 flex justify-center gap-4 text-sm">
-                    <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noreferrer" className="text-primary hover:text-primary-hover font-semibold bg-orange-50 dark:bg-gray-700 dark:text-orange-300 px-4 py-2 rounded-lg transition-colors">
-                        احصل على مفتاح
-                    </a>
-                </div>
             </div>
         </div>
       );
@@ -371,74 +368,97 @@ const ChatPage: React.FC = () => {
 
   // 4. Main Chat Interface
   return (
-    <div className="flex flex-col h-[calc(100vh-2rem)] md:h-[calc(100vh-4rem)] max-w-5xl mx-auto bg-white/60 dark:bg-gray-900/80 backdrop-blur-xl border border-white/20 dark:border-gray-700 shadow-2xl rounded-3xl overflow-hidden font-cairo mt-4 md:mt-8 transition-colors duration-300">
+    <div className="flex flex-col h-screen bg-gray-100 dark:bg-gray-900 transition-colors duration-300">
       {/* Chat Header */}
-      <div className="p-5 border-b border-gray-200/50 dark:border-gray-700/50 bg-white/40 dark:bg-gray-900/60 flex items-center justify-between backdrop-blur-sm z-10" dir="rtl">
-        <div className="flex items-center gap-3">
-             <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-orange-600 flex items-center justify-center text-white shadow-md">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M8.625 12a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H8.25m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H12m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 01-2.555-.337A5.972 5.972 0 015.41 20.97a5.969 5.969 0 01-.474-.065 4.48 4.48 0 00.978-2.025c.09-.457-.133-.901-.467-1.226C3.93 16.178 3 14.189 3 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25z" />
-                </svg>
+      <div className="h-20 bg-white/90 dark:bg-gray-800/90 backdrop-blur-md border-b border-gray-200 dark:border-gray-700 px-4 md:px-8 flex items-center justify-between shadow-sm z-20">
+        <div className="flex items-center">
+             <div className="relative">
+                <div className="w-3 h-3 bg-green-500 rounded-full absolute bottom-0 right-0 border-2 border-white dark:border-gray-800"></div>
+                <div className="w-10 h-10 bg-gradient-to-br from-primary to-orange-600 rounded-xl flex items-center justify-center shadow-md text-white font-bold text-lg">
+                    {bot.name.charAt(0).toUpperCase()}
+                </div>
              </div>
-            <div>
-                <h2 className="text-xl font-bold text-gray-800 dark:text-white">{bot.name}</h2>
-                <div className="flex items-center gap-2">
-                    <span className="flex items-center text-xs text-green-600 dark:text-green-400 font-semibold">
-                        <span className="w-2 h-2 bg-green-500 rounded-full mr-1 animate-pulse"></span>
-                        متصل الآن
-                    </span>
-                    <span className="text-xs text-gray-500 dark:text-gray-400">| {username}</span>
+            <div className="mr-4">
+                <h2 className="text-lg font-bold text-gray-800 dark:text-white font-cairo">{bot.name}</h2>
+                <div className="flex items-center text-xs text-green-600 dark:text-green-400 font-medium">
+                    <span className="w-1.5 h-1.5 bg-green-500 rounded-full ml-1 animate-pulse"></span>
+                    متصل الآن
                 </div>
             </div>
         </div>
-        <div className="flex items-center gap-2">
-            <button onClick={toggleTheme} className="p-2 rounded-xl bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-yellow-400 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors">
+        <div className="flex items-center gap-3">
+            <button onClick={toggleTheme} className="p-2.5 rounded-xl bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-600 dark:text-yellow-400 transition-colors">
                 {isDarkMode ? <SunIcon className="w-5 h-5"/> : <MoonIcon className="w-5 h-5"/>}
             </button>
-            <button onClick={handleLogout} className="text-sm font-semibold text-red-500 hover:text-red-700 bg-red-50/80 dark:bg-red-900/30 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/50 px-4 py-2 rounded-xl transition-colors border border-red-100 dark:border-red-900/30">
-                خروج
+            <div className="hidden md:flex flex-col items-end mr-2">
+                <span className="text-sm font-bold text-gray-700 dark:text-gray-200">{username}</span>
+                <span className="text-[10px] text-gray-400 font-mono">API Key: ••••{userApiKey.slice(-4)}</span>
+            </div>
+            <button 
+                onClick={handleLogout} 
+                className="flex items-center px-4 py-2 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 rounded-xl hover:bg-red-100 dark:hover:bg-red-900/40 transition-colors text-sm font-bold"
+            >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                </svg>
+                <span className="hidden md:inline">خروج</span>
             </button>
         </div>
       </div>
 
       {/* Messages Area */}
-      <div className="flex-grow p-4 md:p-6 overflow-y-auto bg-gray-50/30 dark:bg-gray-900/50 scroll-smooth">
-        {messages.map(msg => (
+      <div className="flex-grow overflow-y-auto p-4 md:p-8 space-y-6 scroll-smooth bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] bg-fixed dark:invert-[0.05]">
+        {messages.map((msg) => (
           <ChatMessageBubble key={msg.id} message={msg} />
         ))}
+        
         {isSending && (
-          <div className="flex justify-start animate-slide-in mb-4">
-             <div className="px-5 py-4 rounded-2xl bg-white/90 dark:bg-gray-800/90 text-gray-500 dark:text-gray-400 rounded-br-none border border-gray-100 dark:border-gray-700 flex items-center shadow-sm gap-3">
-                <div className="flex space-x-1">
-                    <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '0s' }}></div>
-                    <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
-                    <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '0.4s' }}></div>
+          <div className="flex justify-start animate-slide-in">
+             <div className="ml-3 mt-1 hidden md:block w-8 h-8"></div> {/* Spacer */}
+             <div className="px-6 py-4 rounded-2xl rounded-tr-none bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700/50 shadow-sm flex items-center gap-3">
+                <div className="flex space-x-1 space-x-reverse">
+                    <div className="w-2 h-2 bg-primary/60 rounded-full animate-bounce"></div>
+                    <div className="w-2 h-2 bg-primary/80 rounded-full animate-bounce delay-75"></div>
+                    <div className="w-2 h-2 bg-primary rounded-full animate-bounce delay-150"></div>
                 </div>
-                <span className="text-sm font-medium">جاري المعالجة...</span>
+                <span className="text-xs font-medium text-gray-500 dark:text-gray-400 font-cairo">جاري الكتابة...</span>
              </div>
           </div>
         )}
-        <div ref={messagesEndRef} />
+        <div ref={messagesEndRef} className="h-4" />
       </div>
 
       {/* Input Area */}
-      <div className="p-4 border-t border-gray-200/50 dark:border-gray-700/50 bg-white/60 dark:bg-gray-900/80 backdrop-blur-md" dir="rtl">
-        <form onSubmit={handleSendMessage} className="flex items-center gap-3">
-          <input
-            type="text"
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            placeholder="اسأل عن محتوى الملف..."
-            className="flex-grow bg-white dark:bg-gray-700 border-2 border-gray-200 dark:border-gray-600 focus:border-primary dark:focus:border-primary rounded-2xl py-3 px-6 text-gray-800 dark:text-white placeholder-gray-400 dark:placeholder-gray-400 text-lg focus:outline-none transition-all shadow-sm"
-          />
-          <button
-            type="submit"
-            disabled={isSending || !input.trim()}
-            className="bg-gradient-to-r from-primary to-orange-600 text-white rounded-2xl p-4 hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all transform hover:-translate-y-1 active:translate-y-0"
-          >
-            <PaperAirplaneIcon className="w-6 h-6 rtl:rotate-180 transform rotate-180" />
-          </button>
-        </form>
+      <div className="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 p-4 md:p-6 shadow-lg z-20">
+        <div className="max-w-4xl mx-auto relative">
+            <form onSubmit={handleSendMessage} className="relative flex items-center gap-3">
+            <input
+                type="text"
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                placeholder="اكتب سؤالك هنا..."
+                className="flex-grow w-full bg-gray-100 dark:bg-gray-900/50 border-2 border-gray-200 dark:border-gray-600 rounded-2xl py-4 pr-6 pl-14 text-gray-800 dark:text-gray-100 placeholder-gray-400 focus:border-primary focus:ring-0 focus:outline-none transition-all shadow-inner font-cairo text-base"
+                dir="auto"
+            />
+            
+            <div className="absolute left-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
+                <button
+                    type="submit"
+                    disabled={isSending || !input.trim()}
+                    className="p-3 bg-primary hover:bg-primary-hover text-white rounded-xl shadow-lg shadow-orange-500/20 disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none transition-all duration-200 transform hover:scale-105 active:scale-95"
+                >
+                    {isSending ? (
+                         <Spinner className="w-5 h-5 text-white" />
+                    ) : (
+                        <PaperAirplaneIcon className="w-5 h-5 transform rotate-180" />
+                    )}
+                </button>
+            </div>
+            </form>
+            <div className="text-center mt-2 text-[10px] text-gray-400 dark:text-gray-500 font-cairo">
+                قد يرتكب الذكاء الاصطناعي أخطاء. يرجى التحقق من المعلومات الهامة.
+            </div>
+        </div>
       </div>
     </div>
   );

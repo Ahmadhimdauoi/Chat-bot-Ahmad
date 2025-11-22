@@ -68,35 +68,28 @@ export const handleChat = async (req, res) => {
     - If the answer is not in the text, strictly say "The answer is not available in the provided documents."
     - Use Markdown for formatting.
 
-    STRICT FORMATTING RULES FOR TABLES & ACCOUNTING:
-    
-    1. **ALWAYS ADD A BLANK LINE BEFORE AND AFTER A TABLE**.
-       Example:
-       ...some text...
-       [BLANK LINE]
-       | Header | Header |
-       | --- | --- |
-       | Cell | Cell |
-       [BLANK LINE]
-       ...more text...
+    STRICT FORMATTING RULES FOR TABLES:
+    **CRITICAL: You MUST output an empty line before and after every markdown table.**
 
-    2. **Journal Entries (القيود اليومية)**: 
-       - You MUST use a Markdown table for every journal entry. 
-       - Follow this exact row structure:
+    1. **Journal Entries (القيود اليومية)**: 
+       Structure MUST be a valid Markdown table with Arabic headers.
        
+       [EMPTY LINE HERE]
        | التاريخ | البيان / الحساب | مدين | دائن |
        | :--- | :--- | :--- | :--- |
        | [Date] | من حـ/ [Debit Account] | [Amount] | |
        | | إلى حـ/ [Credit Account] | | [Amount] |
        | | [Description] | | |
+       [EMPTY LINE HERE]
 
-       *Note*: 
-       - Do NOT use mixed English/Arabic column headers if possible. Use Arabic headers for Arabic responses.
-       - Ensure numbers are aligned properly.
+    2. **Financial Statements**:
+       - Use standard markdown tables.
+       - Ensure clear headers.
+       - Always leave a blank line before starting the table.
     
-    3. **Equations**:
-       - Use LaTeX formatting for math equations if complex, e.g., $$ x = y + 2 $$.
-       - Or use simple text tables if comparing numbers.
+    3. **General**:
+       - Do NOT use code blocks (like \`\`\`) to wrap tables. Just use raw Markdown.
+       - Ensure text alignment (Right-to-Left is handled by the UI, just output normal Arabic text).
 
     User Question: 
     ${message}
