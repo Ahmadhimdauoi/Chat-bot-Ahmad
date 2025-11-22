@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useParams } from 'react-router-dom';
 import ReactMarkdown from 'react-markdown';
 import remarkMath from 'remark-math';
+import remarkGfm from 'remark-gfm';
 import rehypeKatex from 'rehype-katex';
 import { sendChatMessage, getBot, fetchChatHistory, registerUser } from '../services/apiService';
 import Spinner from '../components/Spinner';
@@ -48,7 +49,7 @@ const ChatMessageBubble: React.FC<{ message: ChatMessage }> = ({ message }) => {
         {isAssistant ? (
           <div className="markdown-content" dir="auto">
             <ReactMarkdown
-              remarkPlugins={[remarkMath]}
+              remarkPlugins={[remarkGfm, remarkMath]}
               rehypePlugins={[rehypeKatex]}
               components={{
                 h1: ({node, ...props}) => <h1 className="text-2xl font-bold text-primary mt-6 mb-3 pb-2 border-b border-gray-100 dark:border-gray-700" {...props} />,

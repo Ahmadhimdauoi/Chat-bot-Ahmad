@@ -47,9 +47,7 @@ export const handleChat = async (req, res) => {
     // 1. RAG: Fetch Context
     const docs = await Document.find({ chatbot_id: botId });
     
-    // Improved Context Formatting: Include Filename and remove strict small limits
-    // Gemini 1.5/2.5 Flash has a ~1M token window (approx 4MB of text). 
-    // We limit to roughly 3,000,000 characters to be safe but allow many PDFs.
+    // Improved Context Formatting
     const context = docs.map(doc => {
         return `--- START OF FILE: ${doc.file_name} ---\n${doc.extracted_content}\n--- END OF FILE: ${doc.file_name} ---`;
     }).join("\n\n");
@@ -59,8 +57,6 @@ export const handleChat = async (req, res) => {
 
     const systemPrompt = bot.systemInstruction || "You are a helpful assistant. Use the provided context to answer questions.";
     
-    // We trim strictly to avoid nodejs memory issues if files are absolutely massive, 
-    // but 2.5 million chars is enough for approx 10-15 text-heavy books.
     const safeContext = context ? context.substring(0, 2500000) : "No document context available.";
 
     const fullPrompt = `
@@ -72,32 +68,35 @@ export const handleChat = async (req, res) => {
     - If the answer is not in the text, strictly say "The answer is not available in the provided documents."
     - Use Markdown for formatting.
 
-    STRICT FORMATTING RULES FOR ACCOUNTING:
-    1. **Journal Entries (القيود اليومية)**: 
-       You MUST use a Markdown table for every journal entry. 
-       You MUST follow this exact row structure for each entry:
+    STRICT FORMATTING RULES FOR TABLES & ACCOUNTING:
+    
+    1. **ALWAYS ADD A BLANK LINE BEFORE AND AFTER A TABLE**.
+       Example:
+       ...some text...
+       [BLANK LINE]
+       | Header | Header |
+       | --- | --- |
+       | Cell | Cell |
+       [BLANK LINE]
+       ...more text...
+
+    2. **Journal Entries (القيود اليومية)**: 
+       - You MUST use a Markdown table for every journal entry. 
+       - Follow this exact row structure:
        
-       | التاريخ (Date) | البيان (Description/Account) | مدين (Debit) | دائن (Credit) |
+       | التاريخ | البيان / الحساب | مدين | دائن |
        | :--- | :--- | :--- | :--- |
        | [Date] | من حـ/ [Debit Account] | [Amount] | |
        | | إلى حـ/ [Credit Account] | | [Amount] |
-       | | [Description/Explanation] | | |
+       | | [Description] | | |
 
-       *Important*: 
-       - Put the Debit account (من حـ/...) on the first row.
-       - Put the Credit account (إلى حـ/...) on the second row.
-       - Put the Description on the third row.
-       - Leave cells empty if they don't apply to that row (e.g. Date only on first row).
-       - Do NOT merge cells.
-       - Do NOT use code blocks for tables.
+       *Note*: 
+       - Do NOT use mixed English/Arabic column headers if possible. Use Arabic headers for Arabic responses.
+       - Ensure numbers are aligned properly.
     
-    2. **Financial Statements**:
-       - Use tables for Balance Sheets, Income Statements, and Trial Balances.
-       - Ensure numbers are clearly formatted.
-    
-    3. **General**:
-       - Make sure the output is visually clean.
-       - Use bold text for Account Names if helpful.
+    3. **Equations**:
+       - Use LaTeX formatting for math equations if complex, e.g., $$ x = y + 2 $$.
+       - Or use simple text tables if comparing numbers.
 
     User Question: 
     ${message}
@@ -106,7 +105,7 @@ export const handleChat = async (req, res) => {
     ${safeContext}`;
 
     const response = await ai.models.generateContent({
-      model: 'gemini-2.5-flash', // Flash models are best for large context windows
+      model: 'gemini-2.5-flash',
       contents: fullPrompt,
     });
 
